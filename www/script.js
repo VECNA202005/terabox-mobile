@@ -122,7 +122,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const modalVideoTitle = document.getElementById("modal-video-title");
     const videoPlayer = document.getElementById("player");
     const playerWrapper = document.getElementById("player-wrapper");
-    const btnFullscreen = document.getElementById("btn-fullscreen");
+    const playerNavEl = document.getElementById("player-nav");
+    const btnPrevVideo = document.getElementById("btn-prev-video");
+    const btnNextVideo = document.getElementById("btn-next-video");
+    const playerNavCounter = document.getElementById("player-nav-counter");
 
     const toast = document.getElementById("toast");
     const toastMessage = document.getElementById("toast-message");
@@ -277,127 +280,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // ================= CUSTOM VIDEO ENGINE =================
-    const customVideoControls = document.getElementById("custom-video-controls");
-    const centerPlayBtn = document.getElementById("center-play-btn");
-    const centerPlayIcon = document.getElementById("center-play-icon");
-    const dtLeft = document.getElementById("dt-left");
-    const dtRight = document.getElementById("dt-right");
-    const timeCurrent = document.getElementById("time-current");
-    const timeDuration = document.getElementById("time-duration");
-    const videoScrubber = document.getElementById("video-scrubber");
-    const btnTogglePlay = document.getElementById("btn-toggle-play");
-    const iconTogglePlay = document.getElementById("icon-toggle-play");
-    const btnToggleMute = document.getElementById("btn-toggle-mute");
-    const iconToggleMute = document.getElementById("icon-toggle-mute");
-    const btnDownloadVideo = document.getElementById("btn-download-video");
-
+    // ================= PLYR VIDEO ENGINE =================
+    let plyrPlayer = null;
     let currentPlayingFileObj = null;
-
-    function formatTime(seconds) {
-        if (isNaN(seconds)) return "00:00";
-        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-        const s = Math.floor(seconds % 60).toString().padStart(2, '0');
-        return `${m}:${s}`;
-    }
-
-    let hideControlsTimeout = null;
-    function showControls() {
-        customVideoControls.classList.remove("hidden-controls");
-        centerPlayBtn.classList.add("show");
-        clearTimeout(hideControlsTimeout);
-        if (!videoPlayer.paused) {
-            hideControlsTimeout = setTimeout(() => {
-                customVideoControls.classList.add("hidden-controls");
-                centerPlayBtn.classList.remove("show");
-            }, 3000);
-        }
-    }
-    
-    playerWrapper.addEventListener("click", (e) => {
-        if (e.target.closest('.bottom-control-bar') || e.target.closest('.center-play-button') || e.target.closest('.btn-close-modal')) return;
-        showControls();
-    });
-
-    if (btnFullscreen) {
-        btnFullscreen.addEventListener("click", () => {
-            if (!document.fullscreenElement) {
-                playerWrapper.requestFullscreen().catch(err => {
-                    showToast("Fullscreen not supported");
-                });
-            } else {
-                document.exitFullscreen();
-            }
-        });
-    }
-
-    // Toggle icon on fullscreen change
-    document.addEventListener("fullscreenchange", () => {
-        const iconFullscreen = document.getElementById("icon-fullscreen");
-        if (iconFullscreen) {
-            iconFullscreen.setAttribute("data-lucide", document.fullscreenElement ? "minimize" : "maximize");
-            lucide.createIcons();
-        }
-    });
-
-    function togglePlay() {
-        if (videoPlayer.paused) videoPlayer.play();
-        else videoPlayer.pause();
-    }
-
-    centerPlayBtn.addEventListener("click", togglePlay);
-    btnTogglePlay.addEventListener("click", togglePlay);
-
-    videoPlayer.addEventListener("play", () => {
-        iconTogglePlay.setAttribute("data-lucide", "pause");
-        centerPlayIcon.setAttribute("data-lucide", "pause");
-        lucide.createIcons();
-        showControls();
-    });
-
-    videoPlayer.addEventListener("pause", () => {
-        iconTogglePlay.setAttribute("data-lucide", "play");
-        centerPlayIcon.setAttribute("data-lucide", "play");
-        lucide.createIcons();
-        showControls();
-    });
-
-    let isScrubbing = false;
-    videoScrubber.addEventListener("mousedown", () => isScrubbing = true);
-    videoScrubber.addEventListener("touchstart", () => isScrubbing = true);
-    videoScrubber.addEventListener("mouseup", () => isScrubbing = false);
-    videoScrubber.addEventListener("touchend", () => isScrubbing = false);
-    
-    videoScrubber.addEventListener("input", (e) => {
-        videoPlayer.currentTime = e.target.value;
-        timeCurrent.textContent = formatTime(videoPlayer.currentTime);
-    });
-
-    videoPlayer.addEventListener("loadedmetadata", () => {
-        timeDuration.textContent = formatTime(videoPlayer.duration);
-        videoScrubber.max = videoPlayer.duration;
-        
-        // Restore history
-        const title = modalVideoTitle.textContent;
-        if (watchHistory[title] && watchHistory[title].time > 0) {
-            videoPlayer.currentTime = watchHistory[title].time;
-            const timestamp = new Date(watchHistory[title].time * 1000).toISOString().substr(11, 8);
-            showToast(`Resumed from ${timestamp}`, 2000);
-        }
-    });
-
     let lastHistorySave = 0;
-    videoPlayer.addEventListener("timeupdate", () => {
-        if (!isScrubbing) {
-            videoScrubber.value = videoPlayer.currentTime;
-            timeCurrent.textContent = formatTime(videoPlayer.currentTime);
-        }
-        if (videoPlayer.paused || !modalVideoTitle.textContent) return;
-        
-        const time = videoPlayer.currentTime;
-        const duration = videoPlayer.duration;
-        const title = modalVideoTitle.textContent;
-        if (time > 0 && time < duration - 5) {
+
+    function initPlyr() {
+        if (plyrPlayer) { plyrPlayer.destroy(); }
+        plyrPlayer = new Plyr('#player', {
+            controls: [
+                'play-large', 'play', 'rewind', 'fast-forward', 'progress',
+                'current-time', 'duration', 'mute', 'volume', 'captions',
+                'settings', 'pip', 'airplay', 'fullscreen'
+            ],
+            resetOnEnd: true,
+            keyboard: { focused: true, global: false },
+            tooltips: { controls: true, seek: true },
+            speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] }
+        });
+
+        plyrPlayer.on('timeupdate', () => {
+            if (!plyrPlayer.playing) return;
+            const time = plyrPlayer.currentTime;
+            const duration = plyrPlayer.duration;
+            const title = modalVideoTitle.textContent;
+            if (!title || time <= 0 || duration <= 0 || time >= duration - 5) return;
+
             if (!watchHistory[title]) {
                 const fileObj = currentPlaylist[currentVideoIndex] || currentPlayingFileObj;
                 watchHistory[title] = { time, file: fileObj, lastWatched: Date.now() };
@@ -405,54 +313,42 @@ document.addEventListener("DOMContentLoaded", () => {
                 watchHistory[title].time = time;
                 watchHistory[title].lastWatched = Date.now();
             }
+
             const now = Date.now();
             if (now - lastHistorySave > 5000) {
                 lastHistorySave = now;
                 const cookieToSend = inputCookie.value.trim() || savedCookie;
                 if (!cookieToSend) return;
-                fetch("/api/history", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                fetch('/api/history', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ cookie: cookieToSend, filename: title, time, fileData: watchHistory[title].file })
-                }).catch(e => {});
+                }).catch(() => {});
             }
-        }
-    });
+        });
 
-    let lastTap = 0;
-    dtLeft.addEventListener("touchstart", (e) => {
-        const now = Date.now();
-        if (now - lastTap < 300) {
-            videoPlayer.currentTime -= 10;
-            showToast("⏪ -10s", 1000);
-        }
-        lastTap = now;
-    });
-    dtRight.addEventListener("touchstart", (e) => {
-        const now = Date.now();
-        if (now - lastTap < 300) {
-            videoPlayer.currentTime += 10;
-            showToast("⏩ +10s", 1000);
-        }
-        lastTap = now;
-    });
-    // Fallback for mouse
-    dtLeft.addEventListener("dblclick", () => { videoPlayer.currentTime -= 10; showToast("⏪ -10s", 1000); });
-    dtRight.addEventListener("dblclick", () => { videoPlayer.currentTime += 10; showToast("⏩ +10s", 1000); });
+        plyrPlayer.on('ready', () => {
+            const title = modalVideoTitle.textContent;
+            if (watchHistory[title] && watchHistory[title].time > 0) {
+                plyrPlayer.currentTime = watchHistory[title].time;
+                const ts = new Date(watchHistory[title].time * 1000).toISOString().substr(11, 8);
+                showToast(`Resumed from ${ts}`, 2000);
+            }
+        });
+    }
 
-    btnToggleMute.addEventListener("click", () => {
-        videoPlayer.muted = !videoPlayer.muted;
-        iconToggleMute.setAttribute("data-lucide", videoPlayer.muted ? "volume-x" : "volume-2");
-        lucide.createIcons();
-    });
+    // Download button
+    const btnDownloadVideo = document.getElementById('btn-download-video');
+    if (btnDownloadVideo) {
+        btnDownloadVideo.addEventListener('click', () => {
+            if (currentPlayingFileObj) {
+                btnDownloadVideo.innerHTML = '<i data-lucide="loader" class="icon-spin"></i> Saving';
+                lucide.createIcons();
+                triggerServerDownload(currentPlayingFileObj, btnDownloadVideo);
+            }
+        });
+    }
 
-    btnDownloadVideo.addEventListener("click", () => {
-        if (currentPlayingFileObj) {
-            btnDownloadVideo.innerHTML = '<i data-lucide="loader" class="icon-spin"></i> Saving';
-            lucide.createIcons();
-            triggerServerDownload(currentPlayingFileObj, btnDownloadVideo);
-        }
-    });
 
     // ================= TOAST NOTIFICATION =================
     function showToast(message, duration = 3000) {
@@ -932,76 +828,76 @@ document.addEventListener("DOMContentLoaded", () => {
         triggerVideoPlay({ filename: file.filename, dlink: dlink, path: file.path });
     }
 
-    // Navigation bindings removed
+    function updatePlayerNavButtons() {
+        if (currentPlaylist.length <= 1) {
+            playerNavEl.classList.add("hidden");
+            return;
+        }
+        playerNavEl.classList.remove("hidden");
+        playerNavCounter.textContent = `${currentVideoIndex + 1} / ${currentPlaylist.length}`;
+        btnPrevVideo.disabled = currentVideoIndex <= 0;
+        btnNextVideo.disabled = currentVideoIndex >= currentPlaylist.length - 1;
+    }
+
+    btnPrevVideo.addEventListener("click", () => {
+        if (currentVideoIndex > 0) playVideoFromPlaylist(currentVideoIndex - 1, isDrivePlaylist);
+    });
+    btnNextVideo.addEventListener("click", () => {
+        if (currentVideoIndex < currentPlaylist.length - 1) playVideoFromPlaylist(currentVideoIndex + 1, isDrivePlaylist);
+    });
 
     function triggerVideoPlay(file) {
         currentPlayingFileObj = file;
         modalVideoTitle.textContent = file.filename;
         
-        // Construct the streaming proxy endpoint path
         const customCookie = inputCookie.value.trim();
         const base = backendBaseUrl.replace(/\/$/, '');
         const streamUrl = `${base}/api/stream?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}`;
+        const posterUrl = file.path ? `${base}/api/thumbnail?path=${encodeURIComponent(file.path)}&cookie=${encodeURIComponent(customCookie)}` : '';
         
-        videoPlayer.src = streamUrl;
-        if (file.path) {
-            videoPlayer.poster = `${base}/api/thumbnail?path=${encodeURIComponent(file.path)}&cookie=${encodeURIComponent(customCookie)}`;
-        } else {
-            videoPlayer.poster = "";
+        // Open modal first so Plyr DOM is visible
+        playerModal.classList.remove("hidden");
+        document.body.style.overflow = "hidden";
+        
+        // Init Plyr and set source
+        initPlyr();
+        plyrPlayer.source = { type: 'video', sources: [{ src: streamUrl }], poster: posterUrl };
+        
+        if (btnDownloadVideo) {
+            btnDownloadVideo.innerHTML = '<i data-lucide="download"></i> Save';
+            lucide.createIcons();
         }
         
-        // Open modal
-        playerModal.classList.remove("hidden");
-        document.body.style.overflow = "hidden"; // disable scroll
-        
-        // Reset download button
-        btnDownloadVideo.innerHTML = '<i data-lucide="download"></i> Save';
-        iconTogglePlay.setAttribute("data-lucide", "pause");
-        centerPlayIcon.setAttribute("data-lucide", "pause");
-        lucide.createIcons();
-        showControls();
-        
-        // Auto play
-        videoPlayer.play().catch(e => console.log("Auto-play blocked by browser policy"));
+        updatePlayerNavButtons();
     }
 
     function playLocalVideo(file) {
         currentPlayingFileObj = file;
         modalVideoTitle.textContent = file.filename;
         
-        videoPlayer.src = file.urlPath;
-        if (file.path) {
-            const customCookie = inputCookie.value.trim() || savedCookie;
-            const base = backendBaseUrl.replace(/\/$/, '');
-            videoPlayer.poster = `${base}/api/thumbnail?path=${encodeURIComponent(file.path)}&cookie=${encodeURIComponent(customCookie)}`;
-        } else {
-            videoPlayer.poster = "";
-        }
-        
-        // Single local file playing
+        const customCookie = inputCookie.value.trim() || savedCookie;
+        const base = backendBaseUrl.replace(/\/$/, '');
+        const posterUrl = file.path ? `${base}/api/thumbnail?path=${encodeURIComponent(file.path)}&cookie=${encodeURIComponent(customCookie)}` : '';
 
-        // Open modal
         playerModal.classList.remove("hidden");
         document.body.style.overflow = "hidden";
-        
-        // Reset download button
-        btnDownloadVideo.innerHTML = '<i data-lucide="download"></i> Save';
-        iconTogglePlay.setAttribute("data-lucide", "pause");
-        centerPlayIcon.setAttribute("data-lucide", "pause");
-        lucide.createIcons();
-        showControls();
-        
-        // Auto play
-        videoPlayer.play().catch(e => console.log("Auto-play blocked by browser policy"));
+
+        initPlyr();
+        plyrPlayer.source = { type: 'video', sources: [{ src: file.urlPath }], poster: posterUrl };
+
+        if (btnDownloadVideo) {
+            btnDownloadVideo.innerHTML = '<i data-lucide="download"></i> Save';
+            lucide.createIcons();
+        }
+        playerNavEl.classList.add("hidden");
     }
 
     function closeModal() {
         currentPlayingFileObj = null;
-        videoPlayer.pause();
-        videoPlayer.src = "";
+        if (plyrPlayer) { plyrPlayer.pause(); }
+        videoPlayer.removeAttribute('src');
         playerModal.classList.add("hidden");
-        document.body.style.overflow = ""; // restore scroll
-        clearTimeout(hideControlsTimeout);
+        document.body.style.overflow = "";
     }
 
     btnCloseModal.addEventListener("click", closeModal);

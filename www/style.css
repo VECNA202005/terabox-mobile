@@ -341,29 +341,24 @@ body {
 .custom-video-controls { position: absolute; inset: 0; display: flex; flex-direction: column; z-index: 15; transition: opacity 0.3s ease; }
 .custom-video-controls.hidden-controls { opacity: 0; pointer-events: none; }
 
-.double-tap-area { position: absolute; top: 0; bottom: 80px; width: 40%; z-index: 16; }
-.double-tap-left { left: 0; }
-.double-tap-right { right: 0; }
+/* Plyr Video Player Theme */
+:root {
+    --plyr-color-main: #00f2fe;
+    --plyr-video-background: #050508;
+    --plyr-font-family: var(--font-body);
+    --plyr-font-size-base: 14px;
+    --plyr-range-fill-background: #00f2fe;
+    --plyr-range-thumb-background: #fff;
+    --plyr-video-controls-background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+}
 
-.center-play-button { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 17; background: rgba(0, 0, 0, 0.5); border-radius: 50%; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-.center-play-button.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-.center-play-icon { width: 32px; height: 32px; color: #fff; margin-left: 4px; }
+.plyr--video { border-radius: 0; height: 100%; }
+.plyr { height: 100%; width: 100%; }
 
-.bottom-control-bar { position: absolute; bottom: 0; left: 0; right: 0; padding: 2rem 1rem env(safe-area-inset-bottom) 1rem; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%); display: flex; flex-direction: column; gap: 0.5rem; z-index: 18; }
+.player-nav { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 0.75rem 1rem; flex-shrink: 0; flex-wrap: wrap; }
+.player-nav.hidden { display: none; }
+.player-nav-counter { font-family: var(--font-body); font-size: 0.9rem; color: var(--md-sys-color-on-surface-variant); }
 
-.scrubber-container { display: flex; align-items: center; gap: 0.75rem; width: 100%; }
-.scrubber-container span { color: #fff; font-size: 0.8rem; font-family: monospace; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
-
-.custom-scrubber { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; outline: none; }
-.custom-scrubber::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--md-sys-color-primary); cursor: pointer; box-shadow: 0 0 8px var(--md-sys-color-primary); transition: transform 0.1s; }
-.custom-scrubber::-webkit-slider-thumb:active { transform: scale(1.3); }
-
-.control-actions { display: flex; align-items: center; gap: 1rem; margin-top: 0.25rem; }
-.btn-control { background: transparent; border: none; color: #fff; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-.btn-control:active { background: rgba(255,255,255,0.1); }
-.btn-control i { width: 24px; height: 24px; }
-
-.player-nav { display: none; } /* Removed old bottom nav completely */
 
 /* ==========================================================================
    Security Lock Screen
