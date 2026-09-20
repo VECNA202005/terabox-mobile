@@ -364,3 +364,37 @@ body {
 .btn-control i { width: 24px; height: 24px; }
 
 .player-nav { display: none; } /* Removed old bottom nav completely */
+
+/* ==========================================================================
+   Security Lock Screen
+   ========================================================================== */
+
+body.locked { overflow: hidden; }
+body.locked .top-app-bar, body.locked .content-wrapper, body.locked .sidebar { display: none; }
+
+.lock-screen { position: fixed; inset: 0; z-index: 9999; background: radial-gradient(circle at top left, #12121a 0%, #050508 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; transition: opacity 0.5s ease, transform 0.5s ease; }
+.lock-screen.unlocked { opacity: 0; pointer-events: none; transform: scale(1.05); }
+
+.lock-header { text-align: center; margin-bottom: 3rem; }
+.lock-icon { width: 3rem; height: 3rem; color: var(--md-sys-color-primary); margin-bottom: 1rem; }
+.lock-header h2 { font-family: var(--font-heading); font-size: 1.75rem; color: var(--md-sys-color-on-background); margin-bottom: 0.5rem; }
+.lock-header p { color: var(--md-sys-color-on-surface-variant); font-size: 0.95rem; }
+
+.pin-dots { display: flex; gap: 1.5rem; margin-bottom: 3rem; }
+.pin-dots .dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--md-sys-color-outline-variant); transition: all 0.2s ease; }
+.pin-dots .dot.filled { background-color: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary); box-shadow: 0 0 10px var(--md-sys-color-primary); }
+.pin-dots.shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-4px, 0, 0); }
+  20%, 80% { transform: translate3d(6px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-10px, 0, 0); }
+  40%, 60% { transform: translate3d(10px, 0, 0); }
+}
+
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; max-width: 320px; width: 100%; margin: 0 auto; }
+.key-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); border-radius: 50%; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; font-family: var(--font-heading); font-weight: 600; color: var(--md-sys-color-on-background); margin: 0 auto; transition: all 0.1s ease; cursor: pointer; }
+.key-btn:active { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); transform: scale(0.9); border-color: var(--md-sys-color-primary); box-shadow: 0 0 15px var(--md-sys-color-primary); }
+.key-backspace { background: transparent; border: none; }
+.key-backspace:active { background: rgba(255, 255, 255, 0.1); transform: scale(0.9); border: none; box-shadow: none; color: inherit; }
+.key-backspace i { width: 28px; height: 28px; }

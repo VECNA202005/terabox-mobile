@@ -16,8 +16,38 @@
     <!-- Material Design 3 CSS -->
     <link rel="stylesheet" href="style.css?v=3">
 </head>
-<body>
+<body class="locked">
     
+    <!-- Security Lock Screen -->
+    <div id="lock-screen" class="lock-screen">
+        <div class="lock-header">
+            <i data-lucide="lock" class="lock-icon"></i>
+            <h2>Enter PIN</h2>
+            <p>App is secured.</p>
+        </div>
+        
+        <div class="pin-dots" id="pin-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+
+        <div class="keypad">
+            <button class="key-btn" data-key="1">1</button>
+            <button class="key-btn" data-key="2">2</button>
+            <button class="key-btn" data-key="3">3</button>
+            <button class="key-btn" data-key="4">4</button>
+            <button class="key-btn" data-key="5">5</button>
+            <button class="key-btn" data-key="6">6</button>
+            <button class="key-btn" data-key="7">7</button>
+            <button class="key-btn" data-key="8">8</button>
+            <button class="key-btn" data-key="9">9</button>
+            <div class="key-spacer"></div>
+            <button class="key-btn" data-key="0">0</button>
+            <button class="key-btn key-backspace" id="btn-backspace"><i data-lucide="delete"></i></button>
+        </div>
+    </div>
     <!-- Material Top App Bar -->
     <header class="top-app-bar">
         <button id="btn-hamburger" class="btn-hamburger" aria-label="Open menu">

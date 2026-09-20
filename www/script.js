@@ -145,12 +145,63 @@ document.addEventListener("DOMContentLoaded", () => {
     let cachedMegaFiles = [];
     let lastSyncedCompleted = "";
 
-    // Sync saved cookie with inputs
-    if (savedCookie) {
-        inputCookie.value = savedCookie;
-        settingsCookieInput.value = savedCookie;
-        loadAppDatabase(savedCookie);
+    // ================= SECURITY PIN LOCK =================
+    const lockScreen = document.getElementById("lock-screen");
+    const pinDots = document.getElementById("pin-dots").querySelectorAll(".dot");
+    const keyBtns = document.querySelectorAll(".key-btn:not(#btn-backspace)");
+    const btnBackspace = document.getElementById("btn-backspace");
+    
+    let enteredPin = "";
+    const CORRECT_PIN = "5002";
+
+    function updatePinDots() {
+        pinDots.forEach((dot, index) => {
+            if (index < enteredPin.length) dot.classList.add("filled");
+            else dot.classList.remove("filled");
+        });
     }
+
+    function checkPin() {
+        if (enteredPin === CORRECT_PIN) {
+            document.body.classList.remove("locked");
+            lockScreen.classList.add("unlocked");
+            
+            // Sync saved cookie with inputs and boot app
+            if (savedCookie) {
+                inputCookie.value = savedCookie;
+                settingsCookieInput.value = savedCookie;
+                loadAppDatabase(savedCookie);
+            }
+        } else {
+            const pinDotsContainer = document.getElementById("pin-dots");
+            pinDotsContainer.classList.add("shake");
+            if (window.navigator.vibrate) window.navigator.vibrate(200);
+            setTimeout(() => {
+                pinDotsContainer.classList.remove("shake");
+                enteredPin = "";
+                updatePinDots();
+            }, 400);
+        }
+    }
+
+    keyBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            if (enteredPin.length < 4) {
+                enteredPin += btn.dataset.key;
+                updatePinDots();
+                if (enteredPin.length === 4) {
+                    setTimeout(checkPin, 100);
+                }
+            }
+        });
+    });
+
+    btnBackspace.addEventListener("click", () => {
+        if (enteredPin.length > 0) {
+            enteredPin = enteredPin.slice(0, -1);
+            updatePinDots();
+        }
+    });
 
     // Initialize Dual-Mode UI
     settingsServerMode.value = serverMode;
