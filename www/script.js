@@ -228,77 +228,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Removed Plyr. Using native HTML5 video player instead.
-    // ================= CLIENT-SIDE HOVER PREVIEW =================
-    const hiddenPreviewVideo = document.createElement("video");
-    hiddenPreviewVideo.muted = true;
-    hiddenPreviewVideo.preload = "auto";
-    hiddenPreviewVideo.style.display = "none";
-    hiddenPreviewVideo.crossOrigin = "anonymous";
-    document.body.appendChild(hiddenPreviewVideo);
-
-    const previewCanvas = document.createElement("canvas");
-    previewCanvas.width = 160;
-    previewCanvas.height = 90;
-    previewCanvas.className = "plyr-preview-canvas";
-    const previewContainer = document.createElement("div");
-    previewContainer.className = "custom-video-preview";
-    previewContainer.style.display = "none";
-    previewContainer.appendChild(previewCanvas);
-
-    function clearPreviewCanvas() {
-        const ctx = previewCanvas.getContext('2d');
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
-        ctx.fillStyle = '#aaa';
-        ctx.font = '12px monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('Loading...', previewCanvas.width / 2, previewCanvas.height / 2);
-    }
-    
-    let previewSeekTimeout = null;
-
-    hiddenPreviewVideo.addEventListener('seeked', () => {
-        const ctx = previewCanvas.getContext('2d');
-        ctx.drawImage(hiddenPreviewVideo, 0, 0, previewCanvas.width, previewCanvas.height);
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        const plyrProgress = document.querySelector('.plyr__progress');
-        
-        if (plyrProgress && plyrProgress.contains(e.target)) {
-            if (!plyrProgress.contains(previewContainer)) {
-                plyrProgress.appendChild(previewContainer);
-            }
-            
-            const rect = plyrProgress.getBoundingClientRect();
-            let percent = (e.clientX - rect.left) / rect.width;
-            if (percent < 0) percent = 0;
-            if (percent > 1) percent = 1;
-            
-            previewContainer.style.display = "block";
-            previewContainer.style.left = `${percent * 100}%`;
-            
-            const hoverTime = percent * player.duration;
-            
-            clearTimeout(previewSeekTimeout);
-            previewSeekTimeout = setTimeout(() => {
-                if (hiddenPreviewVideo.src && !isNaN(hoverTime)) {
-                    hiddenPreviewVideo.currentTime = hoverTime;
-                }
-            }, 75);
-        } else {
-            if (previewContainer.style.display === "block") {
-                previewContainer.style.display = "none";
-            }
-        }
-    });
+    // Client-side hover preview removed since we use native video controls now.
 
     let lastHistorySave = 0;
-    player.on("timeupdate", () => {
-        if (!player.playing || !modalVideoTitle.textContent) return;
-        const time = player.currentTime;
-        const duration = player.duration;
+    videoPlayer.addEventListener("timeupdate", () => {
+        if (videoPlayer.paused || !modalVideoTitle.textContent) return;
+        const time = videoPlayer.currentTime;
+        const duration = videoPlayer.duration;
         const title = modalVideoTitle.textContent;
         if (time > 0 && time < duration - 5) {
             if (!watchHistory[title]) {
@@ -323,10 +259,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    player.on("loadedmetadata", () => {
+    videoPlayer.addEventListener("loadedmetadata", () => {
         const title = modalVideoTitle.textContent;
         if (watchHistory[title] && watchHistory[title].time > 0) {
-            player.currentTime = watchHistory[title].time;
+            videoPlayer.currentTime = watchHistory[title].time;
             const timestamp = new Date(watchHistory[title].time * 1000).toISOString().substr(11, 8);
             showToast(`Resumed from ${timestamp}`, 2000);
         }
