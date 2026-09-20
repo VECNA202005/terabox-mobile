@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     lucide.createIcons();
 
     // ================= DUAL-MODE BACKEND LOGIC =================
-    let backendBaseUrl = localStorage.getItem("backendBaseUrl") || "https://terabox-dl.onrender.com";
+    let backendBaseUrl = localStorage.getItem("backendBaseUrl") || "https://terabox-mobile.onrender.com";
     let serverMode = localStorage.getItem("serverMode") || "cloud";
 
     // Intercept all fetches to prepend the backend URL if it's an API call
@@ -868,8 +868,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function triggerDownload(file) {
         const customCookie = inputCookie.value.trim() || savedCookie;
-        const base = backendBaseUrl.replace(/\/$/, '');
-        const downloadUrl = `${base}/api/download?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}&filename=${encodeURIComponent(file.filename)}`;
+        // Use relative URL — goes directly to the Render server the app is loaded from
+        const downloadUrl = `/api/download?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}&filename=${encodeURIComponent(file.filename)}`;
 
         // Show progress overlay
         dlOverlay.style.display = 'flex';
@@ -879,9 +879,12 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('dl-size').textContent = 'Connecting...';
 
         dlAbortController = new AbortController();
+        // 15 second connection timeout
+        const timeoutId = setTimeout(() => dlAbortController.abort(), 15000);
 
         try {
             const response = await fetch(downloadUrl, { signal: dlAbortController.signal });
+            clearTimeout(timeoutId);
             if (!response.ok) throw new Error(`Server error ${response.status}`);
 
             const contentLength = response.headers.get('Content-Length');
@@ -906,35 +909,30 @@ document.addEventListener("DOMContentLoaded", () => {
                     formatBytes(loaded) + (total ? ' / ' + formatBytes(total) : '');
             }
 
-            // Build a File object from the downloaded bytes
             const blob = new Blob(chunks, { type: 'video/mp4' });
             const shareFile = new File([blob], file.filename, { type: 'video/mp4' });
-
             dlOverlay.style.display = 'none';
 
-            // Try Web Share API (Level 2) — supported on Android Chrome/WebView
             if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
-                await navigator.share({
-                    files: [shareFile],
-                    title: file.filename
-                });
-                showToast('✅ File shared! Choose \'Save to device\' or your gallery app.');
+                await navigator.share({ files: [shareFile], title: file.filename });
+                showToast('✅ Choose \'Save to device\' or your gallery app to save!');
             } else {
-                // Fallback: create object URL and click anchor
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = url;
-                a.download = file.filename;
-                a.click();
+                a.href = url; a.download = file.filename; a.click();
                 setTimeout(() => URL.revokeObjectURL(url), 5000);
                 showToast('✅ Download complete!');
             }
-
         } catch (e) {
+            clearTimeout(timeoutId);
             dlOverlay.style.display = 'none';
-            if (e.name === 'AbortError') return;
-            if (e.name === 'AbortError' || e.message.includes('Share canceled')) return;
-            showToast('❌ Download failed: ' + e.message);
+            if (e.name === 'AbortError') {
+                showToast('❌ Connection timed out. The video link may have expired. Try streaming it first.');
+            } else if (e.message.includes('Share canceled')) {
+                // user dismissed share sheet, not an error
+            } else {
+                showToast('❌ Download failed: ' + e.message);
+            }
         }
     }
 
