@@ -157,12 +157,11 @@ document.addEventListener("DOMContentLoaded", () => {
     settingsServerUrl.value = backendBaseUrl;
     
     settingsServerMode.addEventListener("change", () => {
-        if (settingsServerMode.value === "cloud") {
-            settingsServerUrl.value = "https://terabox-dl.onrender.com";
-            settingsServerUrl.disabled = true;
-        } else {
-            settingsServerUrl.value = "http://10.63.207.110:3000";
-            settingsServerUrl.disabled = false;
+        settingsServerUrl.disabled = false;
+        if (settingsServerMode.value === "cloud" && !settingsServerUrl.value.includes("render")) {
+            settingsServerUrl.value = "https://your-backend.onrender.com";
+        } else if (settingsServerMode.value === "local" && !settingsServerUrl.value.includes("http")) {
+            settingsServerUrl.value = "http://192.168.x.x:3000";
         }
     });
     // Trigger initial state
