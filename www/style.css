@@ -16,17 +16,17 @@
     --md-sys-color-outline: #938F99;
     --md-sys-color-outline-variant: #49454F;
 
-    /* Primary Accent (Material You Blue/Purple) */
-    --md-sys-color-primary: #D0BCFF;
-    --md-sys-color-on-primary: #381E72;
-    --md-sys-color-primary-container: #4F378B;
-    --md-sys-color-on-primary-container: #EADDFF;
+    /* Primary Accent (Cyber Cyan & Blue Gradient) */
+    --md-sys-color-primary: #00f2fe;
+    --md-sys-color-on-primary: #000000;
+    --md-sys-color-primary-container: #003d4d;
+    --md-sys-color-on-primary-container: #b3faff;
     
-    /* Secondary Accent */
-    --md-sys-color-secondary: #CCC2DC;
-    --md-sys-color-on-secondary: #332D41;
-    --md-sys-color-secondary-container: #4A4458;
-    --md-sys-color-on-secondary-container: #E8DEF8;
+    /* Secondary Accent (Vibrant Pink/Magenta) */
+    --md-sys-color-secondary: #fe0979;
+    --md-sys-color-on-secondary: #ffffff;
+    --md-sys-color-secondary-container: #4d0024;
+    --md-sys-color-on-secondary-container: #ffb3d6;
 
     /* Status Colors */
     --md-sys-color-error: #FFB4AB;
@@ -93,8 +93,8 @@ body {
 
 .logo { display: flex; align-items: center; gap: 0.5rem; }
 .logo-icon { width: 1.75rem; height: 1.75rem; color: var(--md-sys-color-primary); }
-.logo-text { font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
-.logo-accent { color: var(--md-sys-color-primary); }
+.logo-text { font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; background: linear-gradient(135deg, #4facfe, #00f2fe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.logo-accent { background: linear-gradient(135deg, #fe0979, #ff758c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-left: 2px; }
 
 /* ==========================================================================
    Side Drawer (Hamburger Menu)
@@ -192,14 +192,16 @@ body {
 
 /* Material Buttons */
 .btn-primary {
-    background-color: var(--md-sys-color-primary);
-    color: var(--md-sys-color-on-primary);
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: #000000;
     border: none; border-radius: var(--md-sys-shape-corner-full);
-    font-family: var(--font-heading); font-size: 1rem; font-weight: 700;
+    font-family: var(--font-heading); font-size: 1rem; font-weight: 800;
     padding: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-    transition: background-color 0.2s; width: 100%;
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
+    width: 100%;
+    box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
 }
-.btn-primary:active { opacity: 0.8; }
+.btn-primary:active { transform: scale(0.95); box-shadow: 0 2px 8px rgba(0, 242, 254, 0.15); }
 
 .btn-outline {
     background: transparent;
