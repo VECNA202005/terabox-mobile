@@ -64,7 +64,7 @@ body {
     overflow-x: hidden;
     line-height: 1.5;
     padding-top: env(safe-area-inset-top);
-    padding-bottom: calc(env(safe-area-inset-bottom) + 80px); /* Space for bottom nav */
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Remove glow backgrounds */
@@ -75,13 +75,21 @@ body {
    ========================================================================== */
 
 .top-app-bar {
-    position: sticky; top: 0; z-index: 100;
+    position: sticky; top: 0; z-index: 90;
     background-color: rgba(0, 0, 0, 0.9);
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; gap: 1rem;
     padding: 0.75rem 1rem;
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
+
+.btn-hamburger {
+    background: transparent; border: none; color: var(--md-sys-color-on-background);
+    width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; cursor: pointer; transition: background-color 0.2s;
+}
+.btn-hamburger:active { background-color: var(--md-sys-color-surface-container); }
+.btn-hamburger i { width: 1.5rem; height: 1.5rem; }
 
 .logo { display: flex; align-items: center; gap: 0.5rem; }
 .logo-icon { width: 1.75rem; height: 1.75rem; color: var(--md-sys-color-primary); }
@@ -89,45 +97,53 @@ body {
 .logo-accent { color: var(--md-sys-color-primary); }
 
 /* ==========================================================================
-   Bottom Navigation Bar
+   Side Drawer (Hamburger Menu)
    ========================================================================== */
 
-.navbar {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+.sidebar-backdrop {
+    position: fixed; inset: 0; z-index: 100;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+}
+.sidebar-backdrop.show { opacity: 1; pointer-events: auto; }
+
+.sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 101;
+    width: 280px; max-width: 80vw;
     background-color: var(--md-sys-color-surface-container);
-    padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom));
-    display: flex; justify-content: space-around; align-items: center;
-    border-top: 1px solid var(--md-sys-color-outline-variant);
+    border-right: 1px solid var(--md-sys-color-outline-variant);
+    transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+    display: flex; flex-direction: column;
+    padding-top: calc(env(safe-area-inset-top) + 1.5rem);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+.sidebar.open { transform: translateX(0); }
+
+.sidebar-header {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    margin-bottom: 1rem;
 }
 
-/* We don't need .nav-container on mobile, we just style .nav-links directly */
-.nav-container { display: contents; }
-
-.nav-links { 
-    display: flex; justify-content: space-between; width: 100%; max-width: 600px; margin: 0 auto;
-    overflow-x: auto; scrollbar-width: none;
+.sidebar-links {
+    display: flex; flex-direction: column; gap: 0.25rem;
+    padding: 0 0.75rem; overflow-y: auto;
 }
-.nav-links::-webkit-scrollbar { display: none; }
 
 .nav-btn {
     background: transparent; border: none; color: var(--md-sys-color-on-surface-variant);
-    font-family: var(--font-body); font-size: 0.7rem; font-weight: 600;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 0.25rem 0.5rem; cursor: pointer; flex: 1 0 auto; gap: 0.25rem;
+    font-family: var(--font-body); font-size: 0.95rem; font-weight: 600;
+    display: flex; align-items: center; gap: 1rem;
+    padding: 0.85rem 1rem; cursor: pointer; border-radius: var(--md-sys-shape-corner-full);
+    width: 100%; transition: background-color 0.2s, color 0.2s;
 }
-.nav-icon { 
-    width: 1.5rem; height: 1.5rem; 
-    padding: 0.2rem; border-radius: 12px; transition: background-color 0.2s;
-}
+.nav-icon { width: 1.25rem; height: 1.25rem; }
 
-.nav-btn.active { color: var(--md-sys-color-on-surface); }
-.nav-btn.active .nav-icon {
-    background-color: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
+.nav-btn.active { 
+    background-color: var(--md-sys-color-primary-container); 
+    color: var(--md-sys-color-on-primary-container); 
 }
-
-/* Hide desktop logo inside navbar */
-.navbar .logo { display: none; }
 
 /* ==========================================================================
    Main Content Layout

@@ -27,6 +27,28 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // ================= ELEMENTS =================
+    const btnHamburger = document.getElementById("btn-hamburger");
+    const sidebar = document.getElementById("sidebar");
+    const sidebarBackdrop = document.getElementById("sidebar-backdrop");
+    
+    // Sidebar Toggle Logic
+    const toggleSidebar = () => {
+        sidebar.classList.toggle("open");
+        sidebarBackdrop.classList.toggle("show");
+    };
+    const closeSidebar = () => {
+        sidebar.classList.remove("open");
+        sidebarBackdrop.classList.remove("show");
+    };
+
+    btnHamburger.addEventListener("click", toggleSidebar);
+    sidebarBackdrop.addEventListener("click", closeSidebar);
+
+    // Close sidebar when clicking a nav button
+    document.querySelectorAll(".sidebar-links .nav-btn").forEach(btn => {
+        btn.addEventListener("click", closeSidebar);
+    });
+
     const btnHome = document.getElementById("btn-home");
     const btnDrive = document.getElementById("btn-drive");
     const btnMega = document.getElementById("btn-mega");
