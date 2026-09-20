@@ -25,8 +25,8 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Serve static frontend files from 'public' directory
-app.use(express.static(path.join(__dirname, "public")));
+// Serve static frontend files from 'www' directory
+app.use(express.static(path.join(__dirname, "www")));
 
 // Ensure downloads directory exists
 const downloadsDir = path.join(__dirname, "downloads");
