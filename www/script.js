@@ -227,29 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // ================= INITIALIZE PLYR PLAYER =================
-    const player = new Plyr("#player", {
-        controls: [
-            "play-large",
-            "restart",
-            "rewind",
-            "play",
-            "fast-forward",
-            "progress",
-            "current-time",
-            "duration",
-            "mute",
-            "volume",
-            "settings",
-            "airplay",
-            "fullscreen"
-        ],
-        ratio: "16:9",
-        seekTime: 10,
-        settings: ["quality", "speed"],
-        speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3] }
-    });
-
+    // Removed Plyr. Using native HTML5 video player instead.
     // ================= CLIENT-SIDE HOVER PREVIEW =================
     const hiddenPreviewVideo = document.createElement("video");
     hiddenPreviewVideo.muted = true;
@@ -867,11 +845,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const base = backendBaseUrl.replace(/\/$/, '');
         const streamUrl = `${base}/api/stream?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}`;
         
-        // Update Plyr source properly
-        player.source = {
-            type: 'video',
-            sources: [ { src: streamUrl, type: 'video/mp4' } ]
-        };
+        // Set native video source
+        videoPlayer.src = streamUrl;
         hiddenPreviewVideo.src = streamUrl;
         clearPreviewCanvas();
         
@@ -880,17 +855,14 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.style.overflow = "hidden"; // disable scroll
         
         // Auto play
-        player.play().catch(e => console.log("Auto-play blocked by browser policy"));
+        videoPlayer.play().catch(e => console.log("Auto-play blocked by browser policy"));
     }
 
     function playLocalVideo(file) {
         modalVideoTitle.textContent = file.filename;
         
-        // Update Plyr source properly
-        player.source = {
-            type: 'video',
-            sources: [ { src: file.urlPath, type: 'video/mp4' } ]
-        };
+        // Set native video source
+        videoPlayer.src = file.urlPath;
         hiddenPreviewVideo.src = file.urlPath;
         clearPreviewCanvas();
         
@@ -902,11 +874,11 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.style.overflow = "hidden";
         
         // Auto play
-        player.play().catch(e => console.log("Auto-play blocked by browser policy"));
+        videoPlayer.play().catch(e => console.log("Auto-play blocked by browser policy"));
     }
 
     function closeModal() {
-        player.pause();
+        videoPlayer.pause();
         videoPlayer.src = "";
         hiddenPreviewVideo.src = "";
         playerModal.classList.add("hidden");
