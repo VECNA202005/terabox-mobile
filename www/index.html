@@ -13,72 +13,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     
-    <!-- Material Design 3 CSS -->
-    <link rel="stylesheet" href="style.css?v=5">
-
-    <!-- Plyr Video Player CSS -->
-    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
-</head>
-<body class="locked">
     
-    <!-- Security Lock Screen -->
-    <div id="lock-screen" class="lock-screen">
-        <div class="lock-header">
-            <i data-lucide="lock" class="lock-icon"></i>
-            <h2>Enter PIN</h2>
-            <p>App is secured.</p>
-        </div>
-        
-        <div class="pin-dots" id="pin-dots">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-        </div>
-
-        <div class="keypad">
-            <button class="key-btn" data-key="1">1</button>
-            <button class="key-btn" data-key="2">2</button>
-            <button class="key-btn" data-key="3">3</button>
-            <button class="key-btn" data-key="4">4</button>
-            <button class="key-btn" data-key="5">5</button>
-            <button class="key-btn" data-key="6">6</button>
-            <button class="key-btn" data-key="7">7</button>
-            <button class="key-btn" data-key="8">8</button>
-            <button class="key-btn" data-key="9">9</button>
-            <div class="key-spacer"></div>
-            <button class="key-btn" data-key="0">0</button>
-            <button class="key-btn key-backspace" id="btn-backspace"><i data-lucide="delete"></i></button>
-        </div>
-    </div>
+    <!-- Material Design 3 CSS -->
+    <link rel="stylesheet" href="style.css?v=3">
+</head>
+<body>
+    
     <!-- Material Top App Bar -->
     <header class="top-app-bar">
         <button id="btn-hamburger" class="btn-hamburger" aria-label="Open menu">
             <i data-lucide="menu"></i>
         </button>
         <div class="logo">
-            <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo-icon-svg">
-                <defs>
-                    <linearGradient id="cyberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#00f2fe" />
-                        <stop offset="100%" stop-color="#4facfe" />
-                    </linearGradient>
-                    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#b122e5" />
-                        <stop offset="100%" stop-color="#ff1361" />
-                    </linearGradient>
-                    <filter id="neonGlow">
-                        <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-                        <feMerge>
-                            <feMergeNode in="coloredBlur"/>
-                            <feMergeNode in="SourceGraphic"/>
-                        </feMerge>
-                    </filter>
-                </defs>
-                <!-- Play Triangle / Stylized T -->
-                <path d="M 25 15 L 85 50 L 25 85 Z" fill="url(#cyberGrad)" filter="url(#neonGlow)"/>
-                <circle cx="50" cy="50" r="40" stroke="url(#purpleGrad)" stroke-width="8" fill="none" filter="url(#neonGlow)"/>
-            </svg>
+            <i data-lucide="play-circle" class="logo-icon"></i>
             <span class="logo-text">TeraPeek<span class="logo-accent">Pro</span></span>
         </div>
     </header>
@@ -326,14 +273,13 @@
                 <button class="btn-close-modal" id="btn-close-modal"><i data-lucide="x"></i></button>
             </div>
             <div class="modal-body">
-                <div class="player-wrapper" id="player-wrapper">
-                    <video id="player" playsinline></video>
+                <div class="player-wrapper">
+                    <video id="player" playsinline controls></video>
                 </div>
-                <div class="player-nav" id="player-nav">
+                <div class="player-nav hidden" id="player-nav">
                     <button class="btn-outline btn-sm" id="btn-prev-video"><i data-lucide="chevron-left"></i> Prev</button>
                     <span class="player-nav-counter" id="player-nav-counter">1 / 1</span>
                     <button class="btn-outline btn-sm" id="btn-next-video">Next <i data-lucide="chevron-right"></i></button>
-                    <button id="btn-download-video" class="btn-primary btn-sm"><i data-lucide="download"></i> Save</button>
                 </div>
             </div>
         </div>
@@ -346,8 +292,7 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Plyr Video Player JS -->
-    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
-    <script src="script.js?v=6"></script>
+
+    <script src="script.js?v=4"></script>
 </body>
 </html>

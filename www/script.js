@@ -121,18 +121,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnCloseModal = document.getElementById("btn-close-modal");
     const modalVideoTitle = document.getElementById("modal-video-title");
     const videoPlayer = document.getElementById("player");
-    const playerWrapper = document.getElementById("player-wrapper");
-    const playerNavEl = document.getElementById("player-nav");
-    const btnPrevVideo = document.getElementById("btn-prev-video");
-    const btnNextVideo = document.getElementById("btn-next-video");
-    const playerNavCounter = document.getElementById("player-nav-counter");
 
     const toast = document.getElementById("toast");
     const toastMessage = document.getElementById("toast-message");
     const loadingStatus = document.getElementById("loading-status");
     const errorMessage = document.getElementById("error-message");
 
-    // (Legacy player-nav removed in custom player update)
+    const playerNav = document.getElementById("player-nav");
+    const btnPrevVideo = document.getElementById("btn-prev-video");
+    const btnNextVideo = document.getElementById("btn-next-video");
+    const playerNavCounter = document.getElementById("player-nav-counter");
 
     // Current State
     let activeShortcode = "";
@@ -147,63 +145,12 @@ document.addEventListener("DOMContentLoaded", () => {
     let cachedMegaFiles = [];
     let lastSyncedCompleted = "";
 
-    // ================= SECURITY PIN LOCK =================
-    const lockScreen = document.getElementById("lock-screen");
-    const pinDots = document.getElementById("pin-dots").querySelectorAll(".dot");
-    const keyBtns = document.querySelectorAll(".key-btn:not(#btn-backspace)");
-    const btnBackspace = document.getElementById("btn-backspace");
-    
-    let enteredPin = "";
-    const CORRECT_PIN = "5002";
-
-    function updatePinDots() {
-        pinDots.forEach((dot, index) => {
-            if (index < enteredPin.length) dot.classList.add("filled");
-            else dot.classList.remove("filled");
-        });
+    // Sync saved cookie with inputs
+    if (savedCookie) {
+        inputCookie.value = savedCookie;
+        settingsCookieInput.value = savedCookie;
+        loadAppDatabase(savedCookie);
     }
-
-    function checkPin() {
-        if (enteredPin === CORRECT_PIN) {
-            document.body.classList.remove("locked");
-            lockScreen.classList.add("unlocked");
-            
-            // Sync saved cookie with inputs and boot app
-            if (savedCookie) {
-                inputCookie.value = savedCookie;
-                settingsCookieInput.value = savedCookie;
-                loadAppDatabase(savedCookie);
-            }
-        } else {
-            const pinDotsContainer = document.getElementById("pin-dots");
-            pinDotsContainer.classList.add("shake");
-            if (window.navigator.vibrate) window.navigator.vibrate(200);
-            setTimeout(() => {
-                pinDotsContainer.classList.remove("shake");
-                enteredPin = "";
-                updatePinDots();
-            }, 400);
-        }
-    }
-
-    keyBtns.forEach(btn => {
-        btn.addEventListener("click", () => {
-            if (enteredPin.length < 4) {
-                enteredPin += btn.dataset.key;
-                updatePinDots();
-                if (enteredPin.length === 4) {
-                    setTimeout(checkPin, 100);
-                }
-            }
-        });
-    });
-
-    btnBackspace.addEventListener("click", () => {
-        if (enteredPin.length > 0) {
-            enteredPin = enteredPin.slice(0, -1);
-            updatePinDots();
-        }
-    });
 
     // Initialize Dual-Mode UI
     settingsServerMode.value = serverMode;
@@ -280,75 +227,46 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // ================= PLYR VIDEO ENGINE =================
-    let plyrPlayer = null;
-    let currentPlayingFileObj = null;
+    // Removed Plyr. Using native HTML5 video player instead.
+    // Client-side hover preview removed since we use native video controls now.
+
     let lastHistorySave = 0;
-
-    function initPlyr() {
-        if (plyrPlayer) { plyrPlayer.destroy(); }
-        plyrPlayer = new Plyr('#player', {
-            controls: [
-                'play-large', 'play', 'rewind', 'fast-forward', 'progress',
-                'current-time', 'duration', 'mute', 'volume', 'captions',
-                'settings', 'pip', 'airplay', 'fullscreen'
-            ],
-            resetOnEnd: true,
-            keyboard: { focused: true, global: false },
-            tooltips: { controls: true, seek: true },
-            speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] }
-        });
-
-        plyrPlayer.on('timeupdate', () => {
-            if (!plyrPlayer.playing) return;
-            const time = plyrPlayer.currentTime;
-            const duration = plyrPlayer.duration;
-            const title = modalVideoTitle.textContent;
-            if (!title || time <= 0 || duration <= 0 || time >= duration - 5) return;
-
+    videoPlayer.addEventListener("timeupdate", () => {
+        if (videoPlayer.paused || !modalVideoTitle.textContent) return;
+        const time = videoPlayer.currentTime;
+        const duration = videoPlayer.duration;
+        const title = modalVideoTitle.textContent;
+        if (time > 0 && time < duration - 5) {
             if (!watchHistory[title]) {
-                const fileObj = currentPlaylist[currentVideoIndex] || currentPlayingFileObj;
+                const fileObj = currentPlaylist[currentVideoIndex];
                 watchHistory[title] = { time, file: fileObj, lastWatched: Date.now() };
             } else {
                 watchHistory[title].time = time;
                 watchHistory[title].lastWatched = Date.now();
             }
-
+            
             const now = Date.now();
             if (now - lastHistorySave > 5000) {
                 lastHistorySave = now;
                 const cookieToSend = inputCookie.value.trim() || savedCookie;
                 if (!cookieToSend) return;
-                fetch('/api/history', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                fetch("/api/history", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ cookie: cookieToSend, filename: title, time, fileData: watchHistory[title].file })
-                }).catch(() => {});
+                }).catch(e => {});
             }
-        });
+        }
+    });
 
-        plyrPlayer.on('ready', () => {
-            const title = modalVideoTitle.textContent;
-            if (watchHistory[title] && watchHistory[title].time > 0) {
-                plyrPlayer.currentTime = watchHistory[title].time;
-                const ts = new Date(watchHistory[title].time * 1000).toISOString().substr(11, 8);
-                showToast(`Resumed from ${ts}`, 2000);
-            }
-        });
-    }
-
-    // Download button
-    const btnDownloadVideo = document.getElementById('btn-download-video');
-    if (btnDownloadVideo) {
-        btnDownloadVideo.addEventListener('click', () => {
-            if (currentPlayingFileObj) {
-                btnDownloadVideo.innerHTML = '<i data-lucide="loader" class="icon-spin"></i> Saving';
-                lucide.createIcons();
-                triggerServerDownload(currentPlayingFileObj, btnDownloadVideo);
-            }
-        });
-    }
-
+    videoPlayer.addEventListener("loadedmetadata", () => {
+        const title = modalVideoTitle.textContent;
+        if (watchHistory[title] && watchHistory[title].time > 0) {
+            videoPlayer.currentTime = watchHistory[title].time;
+            const timestamp = new Date(watchHistory[title].time * 1000).toISOString().substr(11, 8);
+            showToast(`Resumed from ${timestamp}`, 2000);
+        }
+    });
 
     // ================= TOAST NOTIFICATION =================
     function showToast(message, duration = 3000) {
@@ -803,7 +721,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ================= PLAY ACTION =================
     function updatePlayerNavButtons() {
-        // Obsolete function - custom player has no internal playlist nav UI currently
+        if (currentPlaylist.length <= 1) {
+            playerNav.classList.add("hidden");
+            return;
+        }
+        
+        playerNav.classList.remove("hidden");
+        playerNavCounter.textContent = `${currentVideoIndex + 1} / ${currentPlaylist.length}`;
+        
+        btnPrevVideo.disabled = currentVideoIndex <= 0;
+        btnNextVideo.disabled = currentVideoIndex >= currentPlaylist.length - 1;
+        
+        if (btnPrevVideo.disabled) btnPrevVideo.classList.add("btn-disabled");
+        else btnPrevVideo.classList.remove("btn-disabled");
+        
+        if (btnNextVideo.disabled) btnNextVideo.classList.add("btn-disabled");
+        else btnNextVideo.classList.remove("btn-disabled");
     }
 
     async function playVideoFromPlaylist(index, isDrive) {
@@ -825,79 +758,62 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        triggerVideoPlay({ filename: file.filename, dlink: dlink, path: file.path });
-    }
-
-    function updatePlayerNavButtons() {
-        if (currentPlaylist.length <= 1) {
-            playerNavEl.classList.add("hidden");
-            return;
-        }
-        playerNavEl.classList.remove("hidden");
-        playerNavCounter.textContent = `${currentVideoIndex + 1} / ${currentPlaylist.length}`;
-        btnPrevVideo.disabled = currentVideoIndex <= 0;
-        btnNextVideo.disabled = currentVideoIndex >= currentPlaylist.length - 1;
+        triggerVideoPlay({ filename: file.filename, dlink: dlink });
     }
 
     btnPrevVideo.addEventListener("click", () => {
-        if (currentVideoIndex > 0) playVideoFromPlaylist(currentVideoIndex - 1, isDrivePlaylist);
+        if (currentVideoIndex > 0) {
+            playVideoFromPlaylist(currentVideoIndex - 1, isDrivePlaylist);
+        }
     });
+
     btnNextVideo.addEventListener("click", () => {
-        if (currentVideoIndex < currentPlaylist.length - 1) playVideoFromPlaylist(currentVideoIndex + 1, isDrivePlaylist);
+        if (currentVideoIndex < currentPlaylist.length - 1) {
+            playVideoFromPlaylist(currentVideoIndex + 1, isDrivePlaylist);
+        }
     });
 
     function triggerVideoPlay(file) {
-        currentPlayingFileObj = file;
         modalVideoTitle.textContent = file.filename;
         
+        // Construct the streaming proxy endpoint path
         const customCookie = inputCookie.value.trim();
         const base = backendBaseUrl.replace(/\/$/, '');
         const streamUrl = `${base}/api/stream?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}`;
-        const posterUrl = file.path ? `${base}/api/thumbnail?path=${encodeURIComponent(file.path)}&cookie=${encodeURIComponent(customCookie)}` : '';
         
-        // Open modal first so Plyr DOM is visible
+        // Set native video source
+        videoPlayer.src = streamUrl;
+        
+        // Open modal
         playerModal.classList.remove("hidden");
-        document.body.style.overflow = "hidden";
+        document.body.style.overflow = "hidden"; // disable scroll
         
-        // Init Plyr and set source
-        initPlyr();
-        plyrPlayer.source = { type: 'video', sources: [{ src: streamUrl }], poster: posterUrl };
-        
-        if (btnDownloadVideo) {
-            btnDownloadVideo.innerHTML = '<i data-lucide="download"></i> Save';
-            lucide.createIcons();
-        }
-        
-        updatePlayerNavButtons();
+        // Auto play
+        videoPlayer.play().catch(e => console.log("Auto-play blocked by browser policy"));
     }
 
     function playLocalVideo(file) {
-        currentPlayingFileObj = file;
         modalVideoTitle.textContent = file.filename;
         
-        const customCookie = inputCookie.value.trim() || savedCookie;
-        const base = backendBaseUrl.replace(/\/$/, '');
-        const posterUrl = file.path ? `${base}/api/thumbnail?path=${encodeURIComponent(file.path)}&cookie=${encodeURIComponent(customCookie)}` : '';
+        // Set native video source
+        videoPlayer.src = file.urlPath;
+        
+        // Hide playlist navigation since this is a single local file
+        playerNav.classList.add("hidden");
 
+        // Open modal
         playerModal.classList.remove("hidden");
         document.body.style.overflow = "hidden";
-
-        initPlyr();
-        plyrPlayer.source = { type: 'video', sources: [{ src: file.urlPath }], poster: posterUrl };
-
-        if (btnDownloadVideo) {
-            btnDownloadVideo.innerHTML = '<i data-lucide="download"></i> Save';
-            lucide.createIcons();
-        }
-        playerNavEl.classList.add("hidden");
+        
+        // Auto play
+        videoPlayer.play().catch(e => console.log("Auto-play blocked by browser policy"));
     }
 
     function closeModal() {
-        currentPlayingFileObj = null;
-        if (plyrPlayer) { plyrPlayer.pause(); }
-        videoPlayer.removeAttribute('src');
+        videoPlayer.pause();
+        videoPlayer.src = "";
         playerModal.classList.add("hidden");
-        document.body.style.overflow = "";
+        document.body.style.overflow = ""; // restore scroll
     }
 
     btnCloseModal.addEventListener("click", closeModal);
