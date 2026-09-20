@@ -13,10 +13,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     
-    <!-- Plyr Video Player CSS -->
-    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-    
-    
     <!-- Material Design 3 CSS -->
     <link rel="stylesheet" href="style.css?v=3">
 </head>
@@ -276,8 +272,34 @@
                 <button class="btn-close-modal" id="btn-close-modal"><i data-lucide="x"></i></button>
             </div>
             <div class="modal-body">
-                <div class="player-wrapper">
-                    <video id="player" playsinline controls></video>
+                <div class="player-wrapper" id="player-wrapper">
+                    <video id="player" playsinline></video>
+                    
+                    <!-- Custom Video Controls Overlay -->
+                    <div class="custom-video-controls" id="custom-video-controls">
+                        <!-- Double Tap Areas -->
+                        <div class="double-tap-area double-tap-left" id="dt-left"></div>
+                        <div class="double-tap-area double-tap-right" id="dt-right"></div>
+                        
+                        <div class="center-play-button" id="center-play-btn">
+                            <i data-lucide="play" class="center-play-icon" id="center-play-icon"></i>
+                        </div>
+                        
+                        <div class="bottom-control-bar">
+                            <div class="scrubber-container">
+                                <span id="time-current">00:00</span>
+                                <input type="range" id="video-scrubber" min="0" max="100" value="0" class="custom-scrubber">
+                                <span id="time-duration">00:00</span>
+                            </div>
+                            
+                            <div class="control-actions">
+                                <button id="btn-toggle-play" class="btn-control"><i data-lucide="play" id="icon-toggle-play"></i></button>
+                                <button id="btn-toggle-mute" class="btn-control"><i data-lucide="volume-2" id="icon-toggle-mute"></i></button>
+                                <div style="flex: 1;"></div>
+                                <button id="btn-download-video" class="btn-primary btn-sm"><i data-lucide="download"></i> Save</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="player-nav hidden" id="player-nav">
                     <button class="btn-outline btn-sm" id="btn-prev-video"><i data-lucide="chevron-left"></i> Prev</button>
@@ -295,7 +317,6 @@
 
     <!-- Scripts -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
     <script src="script.js?v=4"></script>
 </body>
 </html>

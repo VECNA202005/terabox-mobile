@@ -227,36 +227,113 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // ================= INITIALIZE PLYR PLAYER =================
-    const player = new Plyr("#player", {
-        controls: [
-            "play-large",
-            "play",
-            "progress",
-            "current-time",
-            "duration",
-            "mute",
-            "volume"
-        ],
-        ratio: "16:9",
-        seekTime: 10
+    // ================= CUSTOM VIDEO ENGINE =================
+    const customVideoControls = document.getElementById("custom-video-controls");
+    const centerPlayBtn = document.getElementById("center-play-btn");
+    const centerPlayIcon = document.getElementById("center-play-icon");
+    const dtLeft = document.getElementById("dt-left");
+    const dtRight = document.getElementById("dt-right");
+    const timeCurrent = document.getElementById("time-current");
+    const timeDuration = document.getElementById("time-duration");
+    const videoScrubber = document.getElementById("video-scrubber");
+    const btnTogglePlay = document.getElementById("btn-toggle-play");
+    const iconTogglePlay = document.getElementById("icon-toggle-play");
+    const btnToggleMute = document.getElementById("btn-toggle-mute");
+    const iconToggleMute = document.getElementById("icon-toggle-mute");
+    const btnDownloadVideo = document.getElementById("btn-download-video");
+
+    let currentPlayingFileObj = null;
+
+    function formatTime(seconds) {
+        if (isNaN(seconds)) return "00:00";
+        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    let hideControlsTimeout = null;
+    function showControls() {
+        customVideoControls.classList.remove("hidden-controls");
+        centerPlayBtn.classList.add("show");
+        clearTimeout(hideControlsTimeout);
+        if (!videoPlayer.paused) {
+            hideControlsTimeout = setTimeout(() => {
+                customVideoControls.classList.add("hidden-controls");
+                centerPlayBtn.classList.remove("show");
+            }, 3000);
+        }
+    }
+    
+    customVideoControls.addEventListener("click", (e) => {
+        if (e.target.closest('.bottom-control-bar') || e.target.closest('.center-play-button')) return;
+        showControls();
+    });
+
+    function togglePlay() {
+        if (videoPlayer.paused) videoPlayer.play();
+        else videoPlayer.pause();
+    }
+
+    centerPlayBtn.addEventListener("click", togglePlay);
+    btnTogglePlay.addEventListener("click", togglePlay);
+
+    videoPlayer.addEventListener("play", () => {
+        iconTogglePlay.setAttribute("data-lucide", "pause");
+        centerPlayIcon.setAttribute("data-lucide", "pause");
+        lucide.createIcons();
+        showControls();
+    });
+
+    videoPlayer.addEventListener("pause", () => {
+        iconTogglePlay.setAttribute("data-lucide", "play");
+        centerPlayIcon.setAttribute("data-lucide", "play");
+        lucide.createIcons();
+        showControls();
+    });
+
+    let isScrubbing = false;
+    videoScrubber.addEventListener("mousedown", () => isScrubbing = true);
+    videoScrubber.addEventListener("touchstart", () => isScrubbing = true);
+    videoScrubber.addEventListener("mouseup", () => isScrubbing = false);
+    videoScrubber.addEventListener("touchend", () => isScrubbing = false);
+    
+    videoScrubber.addEventListener("input", (e) => {
+        videoPlayer.currentTime = e.target.value;
+        timeCurrent.textContent = formatTime(videoPlayer.currentTime);
+    });
+
+    videoPlayer.addEventListener("loadedmetadata", () => {
+        timeDuration.textContent = formatTime(videoPlayer.duration);
+        videoScrubber.max = videoPlayer.duration;
+        
+        // Restore history
+        const title = modalVideoTitle.textContent;
+        if (watchHistory[title] && watchHistory[title].time > 0) {
+            videoPlayer.currentTime = watchHistory[title].time;
+            const timestamp = new Date(watchHistory[title].time * 1000).toISOString().substr(11, 8);
+            showToast(`Resumed from ${timestamp}`, 2000);
+        }
     });
 
     let lastHistorySave = 0;
-    player.on("timeupdate", () => {
-        if (!player.playing || !modalVideoTitle.textContent) return;
-        const time = player.currentTime;
-        const duration = player.duration;
+    videoPlayer.addEventListener("timeupdate", () => {
+        if (!isScrubbing) {
+            videoScrubber.value = videoPlayer.currentTime;
+            timeCurrent.textContent = formatTime(videoPlayer.currentTime);
+        }
+        if (videoPlayer.paused || !modalVideoTitle.textContent) return;
+        
+        const time = videoPlayer.currentTime;
+        const duration = videoPlayer.duration;
         const title = modalVideoTitle.textContent;
         if (time > 0 && time < duration - 5) {
             if (!watchHistory[title]) {
-                const fileObj = currentPlaylist[currentVideoIndex];
+                const fileObj = currentPlaylist[currentVideoIndex] || currentPlayingFileObj;
                 watchHistory[title] = { time, file: fileObj, lastWatched: Date.now() };
             } else {
                 watchHistory[title].time = time;
                 watchHistory[title].lastWatched = Date.now();
             }
-            
             const now = Date.now();
             if (now - lastHistorySave > 5000) {
                 lastHistorySave = now;
@@ -271,12 +348,38 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    player.on("loadedmetadata", () => {
-        const title = modalVideoTitle.textContent;
-        if (watchHistory[title] && watchHistory[title].time > 0) {
-            player.currentTime = watchHistory[title].time;
-            const timestamp = new Date(watchHistory[title].time * 1000).toISOString().substr(11, 8);
-            showToast(`Resumed from ${timestamp}`, 2000);
+    let lastTap = 0;
+    dtLeft.addEventListener("touchstart", (e) => {
+        const now = Date.now();
+        if (now - lastTap < 300) {
+            videoPlayer.currentTime -= 10;
+            showToast("⏪ -10s", 1000);
+        }
+        lastTap = now;
+    });
+    dtRight.addEventListener("touchstart", (e) => {
+        const now = Date.now();
+        if (now - lastTap < 300) {
+            videoPlayer.currentTime += 10;
+            showToast("⏩ +10s", 1000);
+        }
+        lastTap = now;
+    });
+    // Fallback for mouse
+    dtLeft.addEventListener("dblclick", () => { videoPlayer.currentTime -= 10; showToast("⏪ -10s", 1000); });
+    dtRight.addEventListener("dblclick", () => { videoPlayer.currentTime += 10; showToast("⏩ +10s", 1000); });
+
+    btnToggleMute.addEventListener("click", () => {
+        videoPlayer.muted = !videoPlayer.muted;
+        iconToggleMute.setAttribute("data-lucide", videoPlayer.muted ? "volume-x" : "volume-2");
+        lucide.createIcons();
+    });
+
+    btnDownloadVideo.addEventListener("click", () => {
+        if (currentPlayingFileObj) {
+            btnDownloadVideo.innerHTML = '<i data-lucide="loader" class="icon-spin"></i> Saving';
+            lucide.createIcons();
+            triggerServerDownload(currentPlayingFileObj, btnDownloadVideo);
         }
     });
 
@@ -786,6 +889,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     function triggerVideoPlay(file) {
+        currentPlayingFileObj = file;
         modalVideoTitle.textContent = file.filename;
         
         // Construct the streaming proxy endpoint path
@@ -793,28 +897,28 @@ document.addEventListener("DOMContentLoaded", () => {
         const base = backendBaseUrl.replace(/\/$/, '');
         const streamUrl = `${base}/api/stream?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}`;
         
-        // Update Plyr source properly
-        player.source = {
-            type: 'video',
-            sources: [ { src: streamUrl, type: 'video/mp4' } ]
-        };
+        videoPlayer.src = streamUrl;
         
         // Open modal
         playerModal.classList.remove("hidden");
         document.body.style.overflow = "hidden"; // disable scroll
         
+        // Reset download button
+        btnDownloadVideo.innerHTML = '<i data-lucide="download"></i> Save';
+        iconTogglePlay.setAttribute("data-lucide", "pause");
+        centerPlayIcon.setAttribute("data-lucide", "pause");
+        lucide.createIcons();
+        showControls();
+        
         // Auto play
-        player.play().catch(e => console.log("Auto-play blocked by browser policy"));
+        videoPlayer.play().catch(e => console.log("Auto-play blocked by browser policy"));
     }
 
     function playLocalVideo(file) {
+        currentPlayingFileObj = file;
         modalVideoTitle.textContent = file.filename;
         
-        // Update Plyr source properly
-        player.source = {
-            type: 'video',
-            sources: [ { src: file.urlPath, type: 'video/mp4' } ]
-        };
+        videoPlayer.src = file.urlPath;
         
         // Hide playlist navigation since this is a single local file
         playerNav.classList.add("hidden");
@@ -823,15 +927,24 @@ document.addEventListener("DOMContentLoaded", () => {
         playerModal.classList.remove("hidden");
         document.body.style.overflow = "hidden";
         
+        // Reset download button
+        btnDownloadVideo.innerHTML = '<i data-lucide="download"></i> Save';
+        iconTogglePlay.setAttribute("data-lucide", "pause");
+        centerPlayIcon.setAttribute("data-lucide", "pause");
+        lucide.createIcons();
+        showControls();
+        
         // Auto play
-        player.play().catch(e => console.log("Auto-play blocked by browser policy"));
+        videoPlayer.play().catch(e => console.log("Auto-play blocked by browser policy"));
     }
 
     function closeModal() {
-        player.pause();
+        currentPlayingFileObj = null;
+        videoPlayer.pause();
         videoPlayer.src = "";
         playerModal.classList.add("hidden");
         document.body.style.overflow = ""; // restore scroll
+        clearTimeout(hideControlsTimeout);
     }
 
     btnCloseModal.addEventListener("click", closeModal);
