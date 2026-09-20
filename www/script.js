@@ -127,10 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const loadingStatus = document.getElementById("loading-status");
     const errorMessage = document.getElementById("error-message");
 
-    const playerNav = document.getElementById("player-nav");
-    const btnPrevVideo = document.getElementById("btn-prev-video");
-    const btnNextVideo = document.getElementById("btn-next-video");
-    const playerNavCounter = document.getElementById("player-nav-counter");
+    // (Legacy player-nav removed in custom player update)
 
     // Current State
     let activeShortcode = "";
@@ -887,22 +884,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ================= PLAY ACTION =================
     function updatePlayerNavButtons() {
-        if (currentPlaylist.length <= 1) {
-            playerNav.classList.add("hidden");
-            return;
-        }
-        
-        playerNav.classList.remove("hidden");
-        playerNavCounter.textContent = `${currentVideoIndex + 1} / ${currentPlaylist.length}`;
-        
-        btnPrevVideo.disabled = currentVideoIndex <= 0;
-        btnNextVideo.disabled = currentVideoIndex >= currentPlaylist.length - 1;
-        
-        if (btnPrevVideo.disabled) btnPrevVideo.classList.add("btn-disabled");
-        else btnPrevVideo.classList.remove("btn-disabled");
-        
-        if (btnNextVideo.disabled) btnNextVideo.classList.add("btn-disabled");
-        else btnNextVideo.classList.remove("btn-disabled");
+        // Obsolete function - custom player has no internal playlist nav UI currently
     }
 
     async function playVideoFromPlaylist(index, isDrive) {
@@ -927,17 +909,7 @@ document.addEventListener("DOMContentLoaded", () => {
         triggerVideoPlay({ filename: file.filename, dlink: dlink });
     }
 
-    btnPrevVideo.addEventListener("click", () => {
-        if (currentVideoIndex > 0) {
-            playVideoFromPlaylist(currentVideoIndex - 1, isDrivePlaylist);
-        }
-    });
-
-    btnNextVideo.addEventListener("click", () => {
-        if (currentVideoIndex < currentPlaylist.length - 1) {
-            playVideoFromPlaylist(currentVideoIndex + 1, isDrivePlaylist);
-        }
-    });
+    // Navigation bindings removed
 
     function triggerVideoPlay(file) {
         currentPlayingFileObj = file;
@@ -971,8 +943,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         videoPlayer.src = file.urlPath;
         
-        // Hide playlist navigation since this is a single local file
-        playerNav.classList.add("hidden");
+        // Single local file playing
 
         // Open modal
         playerModal.classList.remove("hidden");
