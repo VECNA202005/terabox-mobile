@@ -869,15 +869,73 @@ document.addEventListener("DOMContentLoaded", () => {
     async function triggerDownload(file) {
         const customCookie = inputCookie.value.trim() || savedCookie;
         const base = backendBaseUrl.replace(/\/$/, '');
-        // Use the dedicated /api/download endpoint which forces Content-Disposition: attachment
-        // This makes Android's native Download Manager intercept and save the file properly
         const downloadUrl = `${base}/api/download?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}&filename=${encodeURIComponent(file.filename)}`;
 
-        showToast('⬇️ Starting download... Check your notification bar!');
-        
-        // window.open triggers the Android system Download Manager
-        // which saves the file to /Downloads and shows a system notification
-        window.open(downloadUrl, '_blank');
+        // Show progress overlay
+        dlOverlay.style.display = 'flex';
+        document.getElementById('dl-filename').textContent = file.filename;
+        document.getElementById('dl-bar').style.width = '0%';
+        document.getElementById('dl-pct').textContent = '0%';
+        document.getElementById('dl-size').textContent = 'Connecting...';
+
+        dlAbortController = new AbortController();
+
+        try {
+            const response = await fetch(downloadUrl, { signal: dlAbortController.signal });
+            if (!response.ok) throw new Error(`Server error ${response.status}`);
+
+            const contentLength = response.headers.get('Content-Length');
+            const total = contentLength ? parseInt(contentLength, 10) : 0;
+            let loaded = 0;
+            const chunks = [];
+
+            const reader = response.body.getReader();
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                chunks.push(value);
+                loaded += value.length;
+                if (total > 0) {
+                    const pct = Math.round((loaded / total) * 100);
+                    document.getElementById('dl-bar').style.width = pct + '%';
+                    document.getElementById('dl-pct').textContent = pct + '%';
+                } else {
+                    document.getElementById('dl-pct').textContent = 'Downloading...';
+                }
+                document.getElementById('dl-size').textContent =
+                    formatBytes(loaded) + (total ? ' / ' + formatBytes(total) : '');
+            }
+
+            // Build a File object from the downloaded bytes
+            const blob = new Blob(chunks, { type: 'video/mp4' });
+            const shareFile = new File([blob], file.filename, { type: 'video/mp4' });
+
+            dlOverlay.style.display = 'none';
+
+            // Try Web Share API (Level 2) — supported on Android Chrome/WebView
+            if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+                await navigator.share({
+                    files: [shareFile],
+                    title: file.filename
+                });
+                showToast('✅ File shared! Choose \'Save to device\' or your gallery app.');
+            } else {
+                // Fallback: create object URL and click anchor
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = file.filename;
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 5000);
+                showToast('✅ Download complete!');
+            }
+
+        } catch (e) {
+            dlOverlay.style.display = 'none';
+            if (e.name === 'AbortError') return;
+            if (e.name === 'AbortError' || e.message.includes('Share canceled')) return;
+            showToast('❌ Download failed: ' + e.message);
+        }
     }
 
     async function triggerServerDownload(file, btnElement) {
