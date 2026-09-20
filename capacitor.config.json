@@ -2,5 +2,9 @@
   "appId": "com.terabox.app",
   "appName": "TeraPeek Pro",
   "webDir": "www",
-  "bundledWebRuntime": false
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://terabox-mobile.onrender.com/",
+    "cleartext": true
+  }
 }
