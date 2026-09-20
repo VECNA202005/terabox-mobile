@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeraPeek Pro - Premium TeraBox Video Downloader & Streamer</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="manifest" href="./manifest.json">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Plyr Video Player CSS -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    
+    <!-- Main Custom CSS stylesheet -->
+    <link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+    <!-- Background glow grids -->
+    <div class="glow-bg">
+        <div class="glow-1"></div>
+        <div class="glow-2"></div>
+    </div>
+
+    <!-- Navigation Header -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i data-lucide="play-circle" class="logo-icon"></i>
+                <span class="logo-text">TeraPeek<span class="logo-accent">Pro</span></span>
+            </div>
+            <div class="nav-links">
+                <button class="nav-btn active" id="btn-home" title="Inspect Link">
+                    <i data-lucide="search" class="nav-icon"></i> <span class="nav-btn-text">Inspect</span>
+                </button>
+                <button class="nav-btn" id="btn-drive" title="My Drive">
+                    <i data-lucide="folder" class="nav-icon"></i> <span class="nav-btn-text">My Drive</span>
+                </button>
+                <button class="nav-btn" id="btn-mega" title="My Mega">
+                    <i data-lucide="cloud" class="nav-icon"></i> <span class="nav-btn-text">My Mega</span>
+                </button>
+                <button class="nav-btn" id="btn-favorites" title="Favorites">
+                    <i data-lucide="heart" class="nav-icon"></i> <span class="nav-btn-text">Favorites</span>
+                </button>
+                <button class="nav-btn" id="btn-history" title="History">
+                    <i data-lucide="clock" class="nav-icon"></i> <span class="nav-btn-text">History</span>
+                </button>
+                <button class="nav-btn" id="btn-server-downloads" title="Server Downloads">
+                    <i data-lucide="download-cloud" class="nav-icon"></i> <span class="nav-btn-text">Server Downloads</span>
+                </button>
+                <button class="nav-btn" id="btn-help" title="How to Use">
+                    <i data-lucide="help-circle" class="nav-icon"></i> <span class="nav-btn-text">Help</span>
+                </button>
+                <button class="nav-btn" id="btn-settings" title="Cookie Settings">
+                    <i data-lucide="settings" class="nav-icon"></i> <span class="nav-btn-text">Settings</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content wrapper -->
+    <main class="content-wrapper">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <h1 class="hero-title">Stream & Download <br><span class="gradient-text">TeraBox Videos</span> Instantly</h1>
+            <p class="hero-subtitle">Bypass browser restrictions, stream high-quality videos in an ad-free player, and download at maximum speed.</p>
+        </section>
+
+        <!-- Search Card (Glassmorphism) -->
+        <section class="search-section">
+            <div class="search-card">
+                <div class="input-group">
+                    <i data-lucide="link-2" class="input-icon"></i>
+                    <input type="text" id="input-url" placeholder="Paste your TeraBox share link here (e.g., https://terabox.com/s/...)" autocomplete="off">
+                    <button id="btn-clear" class="btn-clear" title="Clear input">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                
+                <div class="advanced-toggle" id="advanced-toggle">
+                    <span>Advanced Options (ndus cookie)</span>
+                    <i data-lucide="chevron-down" class="toggle-icon"></i>
+                </div>
+
+                <div class="advanced-panel" id="advanced-panel">
+                    <div class="cookie-input-group">
+                        <label for="input-cookie">Custom ndus Cookie (Overrides default server cookie)</label>
+                        <div class="input-with-info">
+                            <input type="password" id="input-cookie" placeholder="Paste your ndus cookie value here..." autocomplete="off">
+                            <button class="btn-cookie-visibility" id="btn-cookie-visibility" type="button">
+                                <i data-lucide="eye" id="eye-icon"></i>
+                            </button>
+                        </div>
+                        <p class="helper-text">Required for private, password-protected, or restricted TeraBox links. Saved locally in your browser.</p>
+                    </div>
+                </div>
+
+                <button id="btn-inspect" class="btn-primary">
+                    <span class="btn-text">Inspect TeraBox Link</span>
+                    <i data-lucide="arrow-right" class="btn-icon"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Dynamic Loading state -->
+        <section id="loading-section" class="loading-section hidden">
+            <div class="loader-container">
+                <div class="spinner"></div>
+                <div class="loader-glow"></div>
+            </div>
+            <p class="loading-text" id="loading-status">Connecting to proxy server...</p>
+        </section>
+
+        <!-- Error Panel -->
+        <section id="error-section" class="error-section hidden">
+            <div class="error-card">
+                <i data-lucide="alert-triangle" class="error-icon"></i>
+                <div class="error-content">
+                    <h3 class="error-title">Inspection Failed</h3>
+                    <p class="error-message" id="error-message">Something went wrong. Please check your link.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Files Results Container -->
+        <section id="results-section" class="results-section hidden">
+            <div class="results-header">
+                <div class="results-info">
+                    <i data-lucide="folder-open" class="folder-icon"></i>
+                    <div>
+                        <h2 class="results-title" id="results-surl">Share Contents</h2>
+                        <p class="results-subtitle" id="results-count">Found 0 files</p>
+                    </div>
+                </div>
+                <button class="btn-outline btn-sm" id="btn-copy-surl">
+                    <i data-lucide="copy" class="btn-icon-sm"></i> Copy Shortcode
+                </button>
+            </div>
+
+            <!-- Videos Grid -->
+            <div class="files-grid" id="files-grid">
+                <!-- File Cards injected by JS -->
+            </div>
+        </section>
+
+        <!-- Personal Drive Results Container -->
+        <section id="drive-section" class="drive-section hidden">
+            <div class="results-header">
+                <div class="results-info">
+                    <i data-lucide="database" class="folder-icon"></i>
+                    <div>
+                        <h2 class="results-title">Personal Cloud Storage</h2>
+                        <p class="results-subtitle" id="drive-count">Total 0 item(s)</p>
+                    </div>
+                </div>
+                <div class="drive-actions">
+                    <button class="btn-outline btn-sm" id="btn-drive-back" disabled>
+                        <i data-lucide="arrow-left" class="btn-icon-sm"></i> Back
+                    </button>
+                    <button class="btn-primary btn-sm" id="btn-drive-refresh">
+                        <i data-lucide="refresh-cw" class="btn-icon-sm"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            
+            <div class="drive-path-container">
+                <span class="path-label">Location: </span>
+                <span class="path-value" id="drive-current-path">/</span>
+            </div>
+
+            <!-- Drive Videos Grid -->
+            <div class="files-grid" id="drive-files-grid">
+                <!-- File Cards injected by JS -->
+            </div>
+        </section>
+
+
+
+        <!-- Favorites Results Container -->
+        <section id="favorites-section" class="favorites-section hidden">
+            <div class="results-header">
+                <div class="results-info">
+                    <i data-lucide="heart" class="folder-icon" style="color: var(--clr-error); filter: drop-shadow(0 0 4px var(--clr-error-bg));"></i>
+                    <div>
+                        <h2 class="results-title">Saved Favorites</h2>
+                        <p class="results-subtitle" id="favorites-count">Total 0 item(s)</p>
+                    </div>
+                </div>
+                <div class="drive-actions">
+                    <button class="btn-outline btn-sm" id="btn-favorites-clear">
+                        <i data-lucide="trash-2" class="btn-icon-sm"></i> Clear All
+                    </button>
+                </div>
+            </div>
+
+            <div class="files-grid" id="favorites-files-grid">
+                <!-- File Cards injected by JS -->
+            </div>
+        </section>
+
+        <!-- History Results Container -->
+        <section id="history-section" class="history-section hidden">
+            <div class="results-header">
+                <div class="results-info">
+                    <i data-lucide="clock" class="folder-icon" style="color: var(--clr-accent); filter: drop-shadow(0 0 4px var(--clr-accent));"></i>
+                    <div>
+                        <h2 class="results-title">Watch History</h2>
+                        <p class="results-subtitle" id="history-count">Total 0 item(s)</p>
+                    </div>
+                </div>
+                <div class="drive-actions">
+                    <button class="btn-outline btn-sm" id="btn-history-clear">
+                        <i data-lucide="trash-2" class="btn-icon-sm"></i> Clear All
+                    </button>
+                </div>
+            </div>
+
+            <div class="files-grid" id="history-files-grid">
+                <!-- File Cards injected by JS -->
+            </div>
+        </section>
+
+        <!-- Mega Storage Container -->
+        <section id="mega-section" class="mega-section hidden">
+            <div class="results-header">
+                <div class="results-info">
+                    <i data-lucide="cloud" class="folder-icon" style="color: var(--clr-primary); filter: drop-shadow(0 0 4px var(--clr-primary-glow));"></i>
+                    <div>
+                        <h2 class="results-title">Mega.nz Storage</h2>
+                        <p class="results-subtitle" id="mega-count">Total 0 item(s)</p>
+                    </div>
+                </div>
+                <div class="drive-actions">
+                    <button class="btn-outline btn-sm" id="btn-mega-duplicates" style="margin-right: 10px; color: var(--clr-warning);">
+                        <i data-lucide="layers" class="btn-icon-sm"></i> Find Duplicates
+                    </button>
+                    <button class="btn-outline btn-sm" id="btn-mega-refresh">
+                        <i data-lucide="refresh-cw" class="btn-icon-sm"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="files-grid" id="mega-files-grid">
+                <!-- File Cards injected by JS -->
+            </div>
+        </section>
+
+        <!-- Server Downloads Container -->
+        <section id="server-downloads-section" class="server-downloads-section hidden">
+            <div class="results-header">
+                <div class="results-info">
+                    <i data-lucide="hard-drive" class="folder-icon" style="color: var(--clr-primary); filter: drop-shadow(0 0 4px var(--clr-primary-glow));"></i>
+                    <div>
+                        <h2 class="results-title">Server Downloads</h2>
+                        <p class="results-subtitle" id="server-downloads-count">Downloading locally to server disk</p>
+                    </div>
+                </div>
+                <div class="drive-actions">
+                    <button class="btn-outline btn-sm" id="btn-server-clear-all" style="margin-right: 10px;">
+                        <i data-lucide="trash-2" class="btn-icon-sm"></i> Delete All
+                    </button>
+                    <button class="btn-primary btn-sm" id="btn-server-refresh">
+                        <i data-lucide="refresh-cw" class="btn-icon-sm"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="downloads-grid" id="downloads-grid">
+                <!-- Download Cards injected by JS -->
+            </div>
+        </section>
+
+        <!-- How To Use Guide -->
+        <section id="help-section" class="help-section hidden">
+            <h2 class="section-title">How to Get the TeraBox Cookie</h2>
+            <p class="section-subtitle">Since TeraBox is highly restricted, some files require browser authentication. Follow these simple steps to retrieve your <code>ndus</code> cookie.</p>
+            
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-num">01</div>
+                    <h3 class="step-title">Log in to TeraBox</h3>
+                    <p class="step-desc">Open a new browser tab, go to <a href="https://www.terabox.com" target="_blank" rel="noopener noreferrer">terabox.com</a>, and log in to your account.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-num">02</div>
+                    <h3 class="step-title">Open Developer Tools</h3>
+                    <p class="step-desc">Press <strong>F12</strong> (or right-click anywhere and select <strong>Inspect</strong>) to open Developer Tools, then navigate to the <strong>Application</strong> tab (Chrome) or <strong>Storage</strong> tab (Firefox).</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-num">03</div>
+                    <h3 class="step-title">Copy the ndus Cookie</h3>
+                    <p class="step-desc">Under <strong>Cookies</strong>, select <code>https://www.terabox.com</code>, search for the cookie named <code class="highlight">ndus</code>, and copy its value.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-num">04</div>
+                    <h3 class="step-title">Save in Settings</h3>
+                    <p class="step-desc">Paste the copied cookie value in the Advanced Options panel or in the Cookie Settings tab to persist it.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cookie Settings Panel -->
+        <section id="settings-section" class="settings-section hidden">
+            <div class="settings-card">
+                <h2 class="settings-title">App Settings</h2>
+                <p class="settings-desc">Manage your backend connection and TeraBox credentials.</p>
+                
+                <div class="settings-group" style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--clr-border);">
+                    <label for="settings-server-mode">Backend Server URL (Dual-Mode)</label>
+                    <p class="helper-text" style="margin-bottom: 1rem;">Choose between your permanent cloud server (Render) or your fast local computer network (Localhost).</p>
+                    <select id="settings-server-mode" class="input-select" style="width: 100%; padding: 0.75rem; background: var(--clr-surface-light); border: 1px solid var(--clr-border); border-radius: 8px; color: var(--clr-text-main); margin-bottom: 1rem;">
+                        <option value="cloud">Cloud Mode (Convenience / Render)</option>
+                        <option value="local">Local Mode (Maximum Speed / Localhost)</option>
+                    </select>
+                    <input type="text" id="settings-server-url" placeholder="e.g., https://your-app.onrender.com" style="width: 100%; padding: 0.75rem; background: var(--clr-surface-light); border: 1px solid var(--clr-border); border-radius: 8px; color: var(--clr-text-main);">
+                </div>
+
+                <div class="settings-group">
+                    <label for="settings-cookie-input">Saved ndus Cookie</label>
+                    <p class="helper-text" style="margin-bottom: 0.5rem;">These are saved in your local web storage and are never uploaded to any remote server except for routing proxy calls.</p>
+                    <textarea id="settings-cookie-input" rows="3" placeholder="Enter your ndus cookie value here..."></textarea>
+                </div>
+            </div>
+
+            <div class="settings-actions" style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                <button class="btn-primary" id="btn-save-settings">
+                    <i data-lucide="save" class="btn-icon"></i> Save Settings
+                </button>
+                <button class="btn-outline" id="btn-clear-settings">
+                    <i data-lucide="trash-2" class="btn-icon"></i> Clear
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Built-in Video Player Modal overlay -->
+    <div id="player-modal" class="modal hidden">
+        <div class="modal-backdrop" id="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-video-title" id="modal-video-title">Video Stream</h3>
+                <button class="btn-close-modal" id="btn-close-modal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="player-wrapper">
+                    <video id="player" playsinline controls>
+                        <!-- Source injected by JS -->
+                    </video>
+                </div>
+                <div class="player-nav hidden" id="player-nav">
+                    <button class="btn-outline btn-sm" id="btn-prev-video">
+                        <i data-lucide="skip-back" class="btn-icon-sm"></i> Previous
+                    </button>
+                    <span class="player-nav-counter" id="player-nav-counter">1 / 1</span>
+                    <button class="btn-outline btn-sm" id="btn-next-video">
+                        Next <i data-lucide="skip-forward" class="btn-icon-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Toast Notification -->
+    <div id="toast" class="toast hidden">
+        <span id="toast-message">Message copied!</span>
+    </div>
+
+    <!-- Lucide Icons Library -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Plyr Video Player JS Library -->
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+    
+    <!-- Custom Frontend Application Script -->
+    <script src="script.js?v=3"></script>
+</body>
+</html>
