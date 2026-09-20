@@ -247,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ratio: "16:9",
         seekTime: 10,
         settings: ["quality", "speed"],
-        speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] }
+        speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3] }
     });
 
     // ================= CLIENT-SIDE HOVER PREVIEW =================
