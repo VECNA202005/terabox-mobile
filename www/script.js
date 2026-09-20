@@ -227,14 +227,26 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Removed Plyr. Using native HTML5 video player instead.
-    // Client-side hover preview removed since we use native video controls now.
+    // ================= INITIALIZE PLYR PLAYER =================
+    const player = new Plyr("#player", {
+        controls: [
+            "play-large",
+            "play",
+            "progress",
+            "current-time",
+            "duration",
+            "mute",
+            "volume"
+        ],
+        ratio: "16:9",
+        seekTime: 10
+    });
 
     let lastHistorySave = 0;
-    videoPlayer.addEventListener("timeupdate", () => {
-        if (videoPlayer.paused || !modalVideoTitle.textContent) return;
-        const time = videoPlayer.currentTime;
-        const duration = videoPlayer.duration;
+    player.on("timeupdate", () => {
+        if (!player.playing || !modalVideoTitle.textContent) return;
+        const time = player.currentTime;
+        const duration = player.duration;
         const title = modalVideoTitle.textContent;
         if (time > 0 && time < duration - 5) {
             if (!watchHistory[title]) {
@@ -259,10 +271,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    videoPlayer.addEventListener("loadedmetadata", () => {
+    player.on("loadedmetadata", () => {
         const title = modalVideoTitle.textContent;
         if (watchHistory[title] && watchHistory[title].time > 0) {
-            videoPlayer.currentTime = watchHistory[title].time;
+            player.currentTime = watchHistory[title].time;
             const timestamp = new Date(watchHistory[title].time * 1000).toISOString().substr(11, 8);
             showToast(`Resumed from ${timestamp}`, 2000);
         }
@@ -781,22 +793,28 @@ document.addEventListener("DOMContentLoaded", () => {
         const base = backendBaseUrl.replace(/\/$/, '');
         const streamUrl = `${base}/api/stream?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}`;
         
-        // Set native video source
-        videoPlayer.src = streamUrl;
+        // Update Plyr source properly
+        player.source = {
+            type: 'video',
+            sources: [ { src: streamUrl, type: 'video/mp4' } ]
+        };
         
         // Open modal
         playerModal.classList.remove("hidden");
         document.body.style.overflow = "hidden"; // disable scroll
         
         // Auto play
-        videoPlayer.play().catch(e => console.log("Auto-play blocked by browser policy"));
+        player.play().catch(e => console.log("Auto-play blocked by browser policy"));
     }
 
     function playLocalVideo(file) {
         modalVideoTitle.textContent = file.filename;
         
-        // Set native video source
-        videoPlayer.src = file.urlPath;
+        // Update Plyr source properly
+        player.source = {
+            type: 'video',
+            sources: [ { src: file.urlPath, type: 'video/mp4' } ]
+        };
         
         // Hide playlist navigation since this is a single local file
         playerNav.classList.add("hidden");
@@ -806,11 +824,11 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.style.overflow = "hidden";
         
         // Auto play
-        videoPlayer.play().catch(e => console.log("Auto-play blocked by browser policy"));
+        player.play().catch(e => console.log("Auto-play blocked by browser policy"));
     }
 
     function closeModal() {
-        videoPlayer.pause();
+        player.pause();
         videoPlayer.src = "";
         playerModal.classList.add("hidden");
         document.body.style.overflow = ""; // restore scroll
