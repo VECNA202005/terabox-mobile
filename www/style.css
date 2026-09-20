@@ -331,7 +331,7 @@ body {
 
 .modal-body { flex: 1; display: flex; flex-direction: column; justify-content: center; position: relative; background: #000; }
 .player-wrapper { width: 100%; max-height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.plyr { width: 100%; max-height: 100%; aspect-ratio: 16/9; }
+.plyr { width: 100%; height: auto; max-height: 100vh; }
 
 .player-nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(0,0,0,0.8); padding-bottom: env(safe-area-inset-bottom); }
 .player-nav-counter { font-size: 0.9rem; font-weight: 600; color: #fff; }

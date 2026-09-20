@@ -1389,13 +1389,13 @@ document.addEventListener("DOMContentLoaded", () => {
             
             actionsDiv.innerHTML = `
                 <button class="btn-card-outline play-btn" style="flex: 1; justify-content: center;" title="Play">
-                    <i data-lucide="play" class="btn-icon-sm"></i> Play
+                    <i data-lucide="play" class="btn-icon-sm"></i>
                 </button>
                 <button class="btn-card-outline download-btn" style="flex: 1; justify-content: center;" title="Download">
-                    <i data-lucide="download" class="btn-icon-sm"></i> DL
+                    <i data-lucide="download" class="btn-icon-sm"></i>
                 </button>
                 <button class="btn-card-outline del-btn" style="flex: 1; justify-content: center; color: #f43f5e; border-color: rgba(244, 63, 94, 0.3);" title="Delete from Mega">
-                    <i data-lucide="trash-2" class="btn-icon-sm"></i> Del
+                    <i data-lucide="trash-2" class="btn-icon-sm"></i>
                 </button>
             `;
             
@@ -1914,10 +1914,28 @@ document.addEventListener("DOMContentLoaded", () => {
     
                 const header = document.createElement("div");
                 header.className = "dl-header";
+                header.style.display = "flex";
+                header.style.alignItems = "center";
+                header.style.gap = "0.75rem";
+                
+                const icon = document.createElement("i");
+                icon.dataset.lucide = isVideoFile(dl.filename) ? "video" : "file-text";
+                icon.style.color = "var(--md-sys-color-primary)";
+                icon.style.width = "2rem";
+                icon.style.height = "2rem";
+                icon.style.flexShrink = "0";
                 
                 const title = document.createElement("span");
                 title.className = "dl-title";
                 title.textContent = dl.filename || "Unknown File";
+                title.style.flex = "1";
+                title.style.wordBreak = "break-all";
+                title.style.display = "-webkit-box";
+                title.style.WebkitLineClamp = "2";
+                title.style.WebkitBoxOrient = "vertical";
+                title.style.overflow = "hidden";
+                
+                header.appendChild(icon);
                 
                 const statusStr = dl.status || "unknown";
                 const statusBadge = document.createElement("span");
