@@ -121,6 +121,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnCloseModal = document.getElementById("btn-close-modal");
     const modalVideoTitle = document.getElementById("modal-video-title");
     const videoPlayer = document.getElementById("player");
+    const playerWrapper = document.getElementById("player-wrapper");
+    const btnFullscreen = document.getElementById("btn-fullscreen");
 
     const toast = document.getElementById("toast");
     const toastMessage = document.getElementById("toast-message");
@@ -312,9 +314,30 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
     
-    customVideoControls.addEventListener("click", (e) => {
-        if (e.target.closest('.bottom-control-bar') || e.target.closest('.center-play-button')) return;
+    playerWrapper.addEventListener("click", (e) => {
+        if (e.target.closest('.bottom-control-bar') || e.target.closest('.center-play-button') || e.target.closest('.btn-close-modal')) return;
         showControls();
+    });
+
+    if (btnFullscreen) {
+        btnFullscreen.addEventListener("click", () => {
+            if (!document.fullscreenElement) {
+                playerWrapper.requestFullscreen().catch(err => {
+                    showToast("Fullscreen not supported");
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+    }
+
+    // Toggle icon on fullscreen change
+    document.addEventListener("fullscreenchange", () => {
+        const iconFullscreen = document.getElementById("icon-fullscreen");
+        if (iconFullscreen) {
+            iconFullscreen.setAttribute("data-lucide", document.fullscreenElement ? "minimize" : "maximize");
+            lucide.createIcons();
+        }
     });
 
     function togglePlay() {
@@ -906,7 +929,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        triggerVideoPlay({ filename: file.filename, dlink: dlink });
+        triggerVideoPlay({ filename: file.filename, dlink: dlink, path: file.path });
     }
 
     // Navigation bindings removed
@@ -921,6 +944,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const streamUrl = `${base}/api/stream?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}`;
         
         videoPlayer.src = streamUrl;
+        if (file.path) {
+            videoPlayer.poster = `${base}/api/thumbnail?path=${encodeURIComponent(file.path)}&cookie=${encodeURIComponent(customCookie)}`;
+        } else {
+            videoPlayer.poster = "";
+        }
         
         // Open modal
         playerModal.classList.remove("hidden");
@@ -942,6 +970,13 @@ document.addEventListener("DOMContentLoaded", () => {
         modalVideoTitle.textContent = file.filename;
         
         videoPlayer.src = file.urlPath;
+        if (file.path) {
+            const customCookie = inputCookie.value.trim() || savedCookie;
+            const base = backendBaseUrl.replace(/\/$/, '');
+            videoPlayer.poster = `${base}/api/thumbnail?path=${encodeURIComponent(file.path)}&cookie=${encodeURIComponent(customCookie)}`;
+        } else {
+            videoPlayer.poster = "";
+        }
         
         // Single local file playing
 

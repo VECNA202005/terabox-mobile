@@ -93,7 +93,7 @@ body {
 .btn-hamburger i { width: 1.5rem; height: 1.5rem; }
 
 .logo { display: flex; align-items: center; gap: 0.5rem; }
-.logo-icon { width: 1.75rem; height: 1.75rem; color: var(--md-sys-color-primary); }
+.logo-icon-svg { width: 1.75rem; height: 1.75rem; }
 .logo-text { font-family: var(--font-heading); font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; background: linear-gradient(135deg, #4facfe, #00f2fe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .logo-accent { background: linear-gradient(135deg, #fe0979, #ff758c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-left: 2px; }
 

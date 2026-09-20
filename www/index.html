@@ -54,7 +54,28 @@
             <i data-lucide="menu"></i>
         </button>
         <div class="logo">
-            <i data-lucide="play-circle" class="logo-icon"></i>
+            <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo-icon-svg">
+                <defs>
+                    <linearGradient id="cyberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#00f2fe" />
+                        <stop offset="100%" stop-color="#4facfe" />
+                    </linearGradient>
+                    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#b122e5" />
+                        <stop offset="100%" stop-color="#ff1361" />
+                    </linearGradient>
+                    <filter id="neonGlow">
+                        <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                        <feMerge>
+                            <feMergeNode in="coloredBlur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                    </filter>
+                </defs>
+                <!-- Play Triangle / Stylized T -->
+                <path d="M 25 15 L 85 50 L 25 85 Z" fill="url(#cyberGrad)" filter="url(#neonGlow)"/>
+                <circle cx="50" cy="50" r="40" stroke="url(#purpleGrad)" stroke-width="8" fill="none" filter="url(#neonGlow)"/>
+            </svg>
             <span class="logo-text">TeraPeek<span class="logo-accent">Pro</span></span>
         </div>
     </header>
@@ -325,6 +346,7 @@
                             <div class="control-actions">
                                 <button id="btn-toggle-play" class="btn-control"><i data-lucide="play" id="icon-toggle-play"></i></button>
                                 <button id="btn-toggle-mute" class="btn-control"><i data-lucide="volume-2" id="icon-toggle-mute"></i></button>
+                                <button id="btn-fullscreen" class="btn-control"><i data-lucide="maximize" id="icon-fullscreen"></i></button>
                                 <div style="flex: 1;"></div>
                                 <button id="btn-download-video" class="btn-primary btn-sm"><i data-lucide="download"></i> Save</button>
                             </div>

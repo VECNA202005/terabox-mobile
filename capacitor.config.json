@@ -1,6 +1,6 @@
 {
   "appId": "com.terabox.app",
-  "appName": "TeraPeek Pro",
+  "appName": "Pro",
   "webDir": "www",
   "bundledWebRuntime": false,
   "server": {
