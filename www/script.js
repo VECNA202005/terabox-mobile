@@ -827,23 +827,104 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ================= DOWNLOAD ACTION =================
-    function triggerDownload(file) {
-        const customCookie = inputCookie.value.trim();
+    // Download overlay UI (created once)
+    const dlOverlay = document.createElement('div');
+    dlOverlay.id = 'dl-overlay';
+    dlOverlay.style.cssText = `
+        display:none; position:fixed; inset:0; z-index:9999;
+        background:rgba(0,0,0,0.85); backdrop-filter:blur(8px);
+        flex-direction:column; align-items:center; justify-content:center; gap:1.5rem;
+    `;
+    dlOverlay.innerHTML = `
+        <div style="text-align:center;">
+            <div style="font-size:2.5rem;">⬇️</div>
+            <div id="dl-filename" style="color:#fff;font-weight:700;font-size:1rem;margin-top:0.5rem;max-width:280px;word-break:break-word;"></div>
+        </div>
+        <div style="width:280px;">
+            <div style="background:rgba(255,255,255,0.15);border-radius:999px;height:8px;overflow:hidden;">
+                <div id="dl-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#4facfe,#00f2fe);border-radius:999px;transition:width 0.2s;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:0.5rem;">
+                <span id="dl-pct" style="color:#00f2fe;font-size:0.9rem;font-weight:700;">0%</span>
+                <span id="dl-size" style="color:rgba(255,255,255,0.6);font-size:0.85rem;"></span>
+            </div>
+        </div>
+        <button id="dl-cancel" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:999px;padding:0.6rem 1.5rem;font-size:0.9rem;cursor:pointer;">Cancel</button>
+    `;
+    document.body.appendChild(dlOverlay);
+
+    let dlAbortController = null;
+    document.getElementById('dl-cancel').addEventListener('click', () => {
+        if (dlAbortController) dlAbortController.abort();
+        dlOverlay.style.display = 'none';
+        showToast('Download cancelled.');
+    });
+
+    function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    async function triggerDownload(file) {
+        const customCookie = inputCookie.value.trim() || savedCookie;
         const base = backendBaseUrl.replace(/\/$/, '');
-        // Construct proxy download URL (uses streaming server proxy which appends the filename content-disposition)
         const downloadUrl = `${base}/api/stream?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}`;
-        
-        showToast("Starting download proxy stream... 📦");
-        
-        // Create an iframe to download without modifying screen state
-        let iframe = document.getElementById("downloader-iframe");
-        if (!iframe) {
-            iframe = document.createElement("iframe");
-            iframe.id = "downloader-iframe";
-            iframe.style.display = "none";
-            document.body.appendChild(iframe);
+
+        // Show overlay
+        dlOverlay.style.display = 'flex';
+        document.getElementById('dl-filename').textContent = file.filename;
+        document.getElementById('dl-bar').style.width = '0%';
+        document.getElementById('dl-pct').textContent = '0%';
+        document.getElementById('dl-size').textContent = '';
+
+        dlAbortController = new AbortController();
+
+        try {
+            const response = await fetch(downloadUrl, { signal: dlAbortController.signal });
+            if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+            const contentLength = response.headers.get('Content-Length');
+            const total = contentLength ? parseInt(contentLength, 10) : 0;
+            let loaded = 0;
+            const chunks = [];
+
+            const reader = response.body.getReader();
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                chunks.push(value);
+                loaded += value.length;
+
+                if (total > 0) {
+                    const pct = Math.round((loaded / total) * 100);
+                    document.getElementById('dl-bar').style.width = pct + '%';
+                    document.getElementById('dl-pct').textContent = pct + '%';
+                } else {
+                    document.getElementById('dl-pct').textContent = 'Downloading...';
+                }
+                document.getElementById('dl-size').textContent = formatBytes(loaded) + (total ? ' / ' + formatBytes(total) : '');
+            }
+
+            // Combine chunks into a blob and trigger save
+            const blob = new Blob(chunks, { type: 'video/mp4' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = file.filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            dlOverlay.style.display = 'none';
+            showToast('✅ Download complete! Saved to device.');
+        } catch (e) {
+            dlOverlay.style.display = 'none';
+            if (e.name !== 'AbortError') {
+                showToast('❌ Download failed: ' + e.message);
+            }
         }
-        iframe.src = downloadUrl;
     }
 
     async function triggerServerDownload(file, btnElement) {
