@@ -820,7 +820,9 @@ app.get("/api/mega-stream-node/:nodeId", async (req, res) => {
     if (range) {
       const parts = range.replace(/bytes=/, "").split("-");
       start = parseInt(parts[0], 10);
-      end = parts[1] ? parseInt(parts[1], 10) : file.size - 1;
+      // Request large chunks (16MB) from Mega for faster buffering
+      const requestedEnd = parts[1] ? parseInt(parts[1], 10) : file.size - 1;
+      end = Math.min(requestedEnd, start + 16 * 1024 * 1024 - 1, file.size - 1);
     }
     
     const chunksize = (end - start) + 1;
@@ -829,13 +831,14 @@ app.get("/api/mega-stream-node/:nodeId", async (req, res) => {
       "Accept-Ranges": "bytes",
       "Content-Length": chunksize,
       "Content-Type": "video/mp4",
+      "Cache-Control": "public, max-age=3600",
       "Content-Disposition": req.query.download === 'true' ? `attachment; filename="${encodeURIComponent(file.name)}"` : `inline; filename="${encodeURIComponent(file.name)}"`
     });
     
-    const stream = file.download({ start, end });
-    stream.pipe(res);
-    stream.on("error", () => res.end());
-    req.on("close", () => stream.destroy());
+    const downloadStream = file.download({ start, end });
+    downloadStream.pipe(res);
+    downloadStream.on("error", () => res.end());
+    req.on("close", () => downloadStream.destroy());
   } catch (e) {
     console.error("Mega streaming error:", e);
     if (!res.headersSent) res.status(500).send("Streaming failed.");
