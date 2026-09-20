@@ -832,7 +832,7 @@ app.get("/api/mega-stream-node/:nodeId", async (req, res) => {
       "Content-Disposition": req.query.download === 'true' ? `attachment; filename="${encodeURIComponent(file.name)}"` : `inline; filename="${encodeURIComponent(file.name)}"`
     });
     
-    const stream = file.download({ start, end });
+    const stream = file.download({ start, end, maxConnections: 10 });
     stream.pipe(res);
     stream.on("error", () => res.end());
     req.on("close", () => stream.destroy());
@@ -872,7 +872,7 @@ app.get("/api/mega-stream", async (req, res) => {
       });
     }
 
-    const stream = file.download({ start, end });
+    const stream = file.download({ start, end, maxConnections: 10 });
     stream.pipe(res);
 
     stream.on('error', (e) => {
