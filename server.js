@@ -673,7 +673,6 @@ app.get("/api/stream", async (req, res) => {
   // Forward range requests from client browser to TeraBox CDN
   if (req.headers.range) {
     streamHeaders["Range"] = req.headers.range;
-    console.log(`Forwarding Range Header: ${req.headers.range}`);
   }
 
   try {
@@ -719,6 +718,55 @@ app.get("/api/stream", async (req, res) => {
     if (!res.headersSent) {
       res.status(500).send("Failed to initiate proxy stream: " + error.message);
     }
+  }
+});
+
+/**
+ * Dedicated download endpoint — forces Content-Disposition: attachment so the
+ * Android system Download Manager saves the file to the device.
+ */
+app.get("/api/download", async (req, res) => {
+  const { url, cookie, filename } = req.query;
+
+  if (!url) {
+    return res.status(400).send("Direct link (url) is required.");
+  }
+
+  const ndusCookie = cookie || process.env.NDUS_COOKIE;
+  const dlHeaders = {
+    "User-Agent": "netdisk;7.0.3.2;PC;PC-Windows;10.0.22621",
+    "Referer": "https://www.terabox.com/",
+    "Connection": "keep-alive"
+  };
+  if (ndusCookie) dlHeaders["Cookie"] = `ndus=${ndusCookie.trim()}`;
+
+  try {
+    const targetUrl = decodeURIComponent(url);
+    const safeFilename = (filename || 'video.mp4').replace(/[^\w\-.]/g, '_');
+
+    const dlStream = got.stream(targetUrl, {
+      headers: dlHeaders,
+      throwHttpErrors: false,
+      maxRedirects: 5
+    });
+
+    dlStream.on('response', (upstreamRes) => {
+      const contentLength = upstreamRes.headers['content-length'];
+      // Force download — overrides any inline content-disposition from TeraBox
+      res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+      res.setHeader('Content-Type', 'application/octet-stream');
+      if (contentLength) res.setHeader('Content-Length', contentLength);
+      res.setHeader('Cache-Control', 'no-store');
+      res.status(200);
+    });
+
+    dlStream.on('error', (e) => {
+      if (!res.headersSent) res.status(500).send('Download proxy failed.');
+    });
+
+    dlStream.pipe(res);
+  } catch (error) {
+    if (!res.headersSent) res.status(500).send('Failed to initiate download: ' + error.message);
   }
 });
 

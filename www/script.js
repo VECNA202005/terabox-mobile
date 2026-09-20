@@ -869,62 +869,15 @@ document.addEventListener("DOMContentLoaded", () => {
     async function triggerDownload(file) {
         const customCookie = inputCookie.value.trim() || savedCookie;
         const base = backendBaseUrl.replace(/\/$/, '');
-        const downloadUrl = `${base}/api/stream?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}`;
+        // Use the dedicated /api/download endpoint which forces Content-Disposition: attachment
+        // This makes Android's native Download Manager intercept and save the file properly
+        const downloadUrl = `${base}/api/download?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}&filename=${encodeURIComponent(file.filename)}`;
 
-        // Show overlay
-        dlOverlay.style.display = 'flex';
-        document.getElementById('dl-filename').textContent = file.filename;
-        document.getElementById('dl-bar').style.width = '0%';
-        document.getElementById('dl-pct').textContent = '0%';
-        document.getElementById('dl-size').textContent = '';
-
-        dlAbortController = new AbortController();
-
-        try {
-            const response = await fetch(downloadUrl, { signal: dlAbortController.signal });
-            if (!response.ok) throw new Error(`Server error: ${response.status}`);
-
-            const contentLength = response.headers.get('Content-Length');
-            const total = contentLength ? parseInt(contentLength, 10) : 0;
-            let loaded = 0;
-            const chunks = [];
-
-            const reader = response.body.getReader();
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                chunks.push(value);
-                loaded += value.length;
-
-                if (total > 0) {
-                    const pct = Math.round((loaded / total) * 100);
-                    document.getElementById('dl-bar').style.width = pct + '%';
-                    document.getElementById('dl-pct').textContent = pct + '%';
-                } else {
-                    document.getElementById('dl-pct').textContent = 'Downloading...';
-                }
-                document.getElementById('dl-size').textContent = formatBytes(loaded) + (total ? ' / ' + formatBytes(total) : '');
-            }
-
-            // Combine chunks into a blob and trigger save
-            const blob = new Blob(chunks, { type: 'video/mp4' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = file.filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            dlOverlay.style.display = 'none';
-            showToast('✅ Download complete! Saved to device.');
-        } catch (e) {
-            dlOverlay.style.display = 'none';
-            if (e.name !== 'AbortError') {
-                showToast('❌ Download failed: ' + e.message);
-            }
-        }
+        showToast('⬇️ Starting download... Check your notification bar!');
+        
+        // window.open triggers the Android system Download Manager
+        // which saves the file to /Downloads and shows a system notification
+        window.open(downloadUrl, '_blank');
     }
 
     async function triggerServerDownload(file, btnElement) {
