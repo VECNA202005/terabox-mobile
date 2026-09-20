@@ -867,8 +867,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const base = backendBaseUrl.replace(/\/$/, '');
         const streamUrl = `${base}/api/stream?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}`;
         
-        // Reset player source
-        videoPlayer.src = streamUrl;
+        // Update Plyr source properly
+        player.source = {
+            type: 'video',
+            sources: [ { src: streamUrl, type: 'video/mp4' } ]
+        };
         hiddenPreviewVideo.src = streamUrl;
         clearPreviewCanvas();
         
@@ -883,8 +886,11 @@ document.addEventListener("DOMContentLoaded", () => {
     function playLocalVideo(file) {
         modalVideoTitle.textContent = file.filename;
         
-        // Local server download path
-        videoPlayer.src = file.urlPath;
+        // Update Plyr source properly
+        player.source = {
+            type: 'video',
+            sources: [ { src: file.urlPath, type: 'video/mp4' } ]
+        };
         hiddenPreviewVideo.src = file.urlPath;
         clearPreviewCanvas();
         
