@@ -329,8 +329,9 @@ body {
 .modal-video-title { font-family: var(--font-body); font-size: 1rem; font-weight: 600; color: #fff; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
 .btn-close-modal { background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 2.5rem; height: 2.5rem; color: #fff; display: flex; align-items: center; justify-content: center; }
 
-.modal-body { flex: 1; display: flex; flex-direction: column; justify-content: center; position: relative; }
-.player-wrapper { width: 100%; }
+.modal-body { flex: 1; display: flex; flex-direction: column; justify-content: center; position: relative; background: #000; }
+.player-wrapper { width: 100%; max-height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.plyr { width: 100%; max-height: 100%; aspect-ratio: 16/9; }
 
 .player-nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(0,0,0,0.8); padding-bottom: env(safe-area-inset-bottom); }
 .player-nav-counter { font-size: 0.9rem; font-weight: 600; color: #fff; }

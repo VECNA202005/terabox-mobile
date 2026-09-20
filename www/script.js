@@ -864,7 +864,8 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Construct the streaming proxy endpoint path
         const customCookie = inputCookie.value.trim();
-        const streamUrl = `/api/stream?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}`;
+        const base = backendBaseUrl.replace(/\/$/, '');
+        const streamUrl = `${base}/api/stream?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}`;
         
         // Reset player source
         videoPlayer.src = streamUrl;
@@ -919,8 +920,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // ================= DOWNLOAD ACTION =================
     function triggerDownload(file) {
         const customCookie = inputCookie.value.trim();
+        const base = backendBaseUrl.replace(/\/$/, '');
         // Construct proxy download URL (uses streaming server proxy which appends the filename content-disposition)
-        const downloadUrl = `/api/stream?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}`;
+        const downloadUrl = `${base}/api/stream?url=${encodeURIComponent(file.dlink)}&cookie=${encodeURIComponent(customCookie)}`;
         
         showToast("Starting download proxy stream... 📦");
         
@@ -1082,7 +1084,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (file.thumbnail) {
                     const img = document.createElement("img");
-                    img.src = `/api/thumbnail?path=${encodeURIComponent(file.path)}&cookie=${encodeURIComponent(inputCookie.value.trim() || savedCookie)}`;
+                    const base = backendBaseUrl.replace(/\/$/, '');
+                    img.src = `${base}/api/thumbnail?path=${encodeURIComponent(file.path)}&cookie=${encodeURIComponent(inputCookie.value.trim() || savedCookie)}`;
                     img.alt = file.filename;
                     img.className = "file-thumbnail";
                     img.onload = () => mediaDiv.classList.remove("shimmer");
