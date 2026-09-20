@@ -783,8 +783,6 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Set native video source
         videoPlayer.src = streamUrl;
-        hiddenPreviewVideo.src = streamUrl;
-        clearPreviewCanvas();
         
         // Open modal
         playerModal.classList.remove("hidden");
@@ -799,8 +797,6 @@ document.addEventListener("DOMContentLoaded", () => {
         
         // Set native video source
         videoPlayer.src = file.urlPath;
-        hiddenPreviewVideo.src = file.urlPath;
-        clearPreviewCanvas();
         
         // Hide playlist navigation since this is a single local file
         playerNav.classList.add("hidden");
@@ -816,7 +812,6 @@ document.addEventListener("DOMContentLoaded", () => {
     function closeModal() {
         videoPlayer.pause();
         videoPlayer.src = "";
-        hiddenPreviewVideo.src = "";
         playerModal.classList.add("hidden");
         document.body.style.overflow = ""; // restore scroll
     }
